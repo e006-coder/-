@@ -1,6 +1,8 @@
 export type TaxMode = 'none' | '4' | '10';
+export type MetalGroup = "Au" | "Pt" | "SV";
 
 export interface FormData {
+  date: string;        // reference date for market rate lookup
   metalGrade: string;
   productCategory: string;
   productNo: string;
@@ -36,6 +38,7 @@ export interface HistoryEntry {
 
 export interface MarketRate {
   date: string;
-  rate: number;
-  prices: Record<string, number>;
+  rates: { Au: number; Pt: number; SV: number };
+  prices: Record<string, number>;      // effective price per grade
+  manualOverrides: Record<string, boolean>; // which grades were manually set
 }

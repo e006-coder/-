@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
-import { METAL_PRICES } from '@/lib/constants';
+import { METAL_BASE_PRICE } from '@/lib/constants';
 import { calculate, parseNum } from '@/lib/calc';
 import type { FormData, HistoryEntry, MarketRate, CalculationResult } from '@/lib/types';
 import { CalculatorForm } from './CalculatorForm';
@@ -11,9 +11,9 @@ import { MarketRatePanel } from './MarketRatePanel';
 
 const STORAGE_HISTORY = 'jewelry-calc-history';
 const STORAGE_MARKET = 'jewelry-calc-market';
-const STORAGE_ACTIVE_DATE = 'jewelry-calc-active-date';
 
 const EMPTY_FORM: FormData = {
+  date: new Date().toISOString().slice(0, 10),
   metalGrade: 'K18',
   productCategory: '',
   productNo: '',
@@ -40,7 +40,7 @@ function loadStorage<T>(key: string, fallback: T): T {
 
 function exportCsv(history: HistoryEntry[]) {
   const headers = [
-    '番号', '日時', '品位', '製品区分', 'No.', 'TAX',
+    '番号', '日時', '日付', '品位', '製品区分', 'No.', 'TAX',
     '製品代(円)', '製品重量(g)', '中石重量(ct)', '脇石重量(ct)', '脇石単価(円/ct)',
     'MD重量(ct)', 'MD単価(円/ct)', '地金重量(g)', '地金単価(円/g)',
     '地金代(円)', '中石代(円)', '中石＠(円/ct)',
@@ -49,7 +49,7 @@ function exportCsv(history: HistoryEntry[]) {
     const f = e.form;
     const r = e.result;
     return [
-      i + 1, e.timestamp, f.metalGrade, f.productCategory, f.productNo,
+      i + 1, e.timestamp, f.date, f.metalGrade, f.productCategory, f.productNo,
       f.taxMode === 'none' ? 'なし' : `${f.taxMode}%`,
       parseNum(f.productPrice), parseNum(f.productWeight),
       parseNum(f.centerStoneWeight), parseNum(f.sideStoneWeight), parseNum(f.sideStonePricePerCt),
@@ -79,13 +79,11 @@ export default function App() {
   const [form, setForm] = useState<FormData>(EMPTY_FORM);
   const [history, setHistory] = useState<HistoryEntry[]>([]);
   const [marketRates, setMarketRates] = useState<MarketRate[]>([]);
-  const [activeDate, setActiveDate] = useState<string>('');
   const [hydrated, setHydrated] = useState(false);
 
   useEffect(() => {
     setHistory(loadStorage<HistoryEntry[]>(STORAGE_HISTORY, []));
     setMarketRates(loadStorage<MarketRate[]>(STORAGE_MARKET, []));
-    setActiveDate(loadStorage<string>(STORAGE_ACTIVE_DATE, ''));
     setHydrated(true);
   }, []);
 
@@ -97,21 +95,17 @@ export default function App() {
     if (hydrated) localStorage.setItem(STORAGE_MARKET, JSON.stringify(marketRates));
   }, [marketRates, hydrated]);
 
-  useEffect(() => {
-    if (hydrated) localStorage.setItem(STORAGE_ACTIVE_DATE, activeDate);
-  }, [activeDate, hydrated]);
-
   const activeMarketRate = useMemo(
-    () => marketRates.find((r) => r.date === activeDate) ?? null,
-    [marketRates, activeDate]
+    () => (form.date ? marketRates.find((r) => r.date === form.date) ?? null : null),
+    [marketRates, form.date]
   );
 
   const effectiveMetalPrice = useMemo((): number => {
     if (!form.metalGrade) return 0;
     if (activeMarketRate) {
-      return activeMarketRate.prices[form.metalGrade] ?? METAL_PRICES[form.metalGrade] ?? 0;
+      return activeMarketRate.prices[form.metalGrade] ?? METAL_BASE_PRICE[form.metalGrade] ?? 0;
     }
-    return METAL_PRICES[form.metalGrade] ?? 0;
+    return METAL_BASE_PRICE[form.metalGrade] ?? 0;
   }, [form.metalGrade, activeMarketRate]);
 
   const canCalculate =
@@ -136,7 +130,12 @@ export default function App() {
       result,
     };
     setHistory((prev) => [...prev, entry]);
-    setForm({ ...EMPTY_FORM, metalGrade: form.metalGrade, taxMode: form.taxMode });
+    setForm({
+      ...EMPTY_FORM,
+      date: form.date,
+      metalGrade: form.metalGrade,
+      taxMode: form.taxMode,
+    });
   };
 
   const handleSaveMarketRate = (mr: MarketRate) => {
@@ -144,12 +143,10 @@ export default function App() {
       const filtered = prev.filter((r) => r.date !== mr.date);
       return [...filtered, mr].sort((a, b) => a.date.localeCompare(b.date));
     });
-    setActiveDate(mr.date);
   };
 
   const handleDeleteMarketRate = (date: string) => {
     setMarketRates((prev) => prev.filter((r) => r.date !== date));
-    if (activeDate === date) setActiveDate('');
   };
 
   return (
@@ -162,9 +159,13 @@ export default function App() {
               ジュエリー石代計算
             </h1>
           </div>
-          {activeMarketRate && (
-            <div className="text-xs text-gold-600 bg-gold-50 border border-gold-200 rounded-full px-3 py-1">
-              相場: {activeMarketRate.date} (×{activeMarketRate.rate})
+          {form.date && (
+            <div className={`text-xs rounded-full px-3 py-1 border ${
+              activeMarketRate
+                ? 'text-gold-600 bg-gold-50 border-gold-200'
+                : 'text-gray-400 bg-gray-50 border-gray-200'
+            }`}>
+              {activeMarketRate ? `相場: ${form.date}` : `相場未設定: ${form.date}`}
             </div>
           )}
         </div>
@@ -217,9 +218,7 @@ export default function App() {
         {tab === 'market' && (
           <MarketRatePanel
             marketRates={marketRates}
-            activeDate={activeDate}
             onSave={handleSaveMarketRate}
-            onSelectDate={(d) => setActiveDate(d)}
             onDelete={handleDeleteMarketRate}
           />
         )}
