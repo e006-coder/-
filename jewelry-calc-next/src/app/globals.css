@@ -1,0 +1,56 @@
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;600;700&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --color-gold-50: #fdf9ee;
+  --color-gold-100: #f7edcc;
+  --color-gold-200: #eed897;
+  --color-gold-300: #e4be5c;
+  --color-gold-400: #d4a017;
+  --color-gold-500: #b8860b;
+  --color-gold-600: #9a6f0a;
+  --color-gold-700: #7a550b;
+  --color-gold-800: #63430e;
+  --color-gold-900: #523710;
+  --color-ivory: #f8f5f0;
+
+  --font-sans: 'Noto Sans JP', 'Hiragino Kaku Gothic ProN', 'Hiragino Sans', Meiryo, sans-serif;
+}
+
+body {
+  margin: 0;
+  font-family: 'Noto Sans JP', 'Hiragino Kaku Gothic ProN', 'Hiragino Sans', Meiryo, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  color-scheme: light;
+}
+
+@layer components {
+  .card {
+    @apply bg-white rounded-2xl shadow-sm border border-gold-100 p-4 sm:p-6;
+  }
+
+  .label {
+    @apply block text-xs font-medium text-gray-500 mb-1;
+  }
+
+  .input {
+    @apply w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gold-400 focus:border-transparent transition;
+  }
+
+  .input-readonly {
+    @apply w-full border border-gray-100 rounded-lg px-3 py-2 text-sm bg-gray-50 text-gray-500;
+  }
+
+  .btn-primary {
+    @apply bg-gold-500 hover:bg-gold-600 active:bg-gold-700 text-white font-semibold px-5 py-2.5 rounded-xl transition text-sm;
+  }
+
+  .btn-secondary {
+    @apply bg-white hover:bg-gray-50 active:bg-gray-100 text-gray-700 font-medium px-5 py-2.5 rounded-xl border border-gray-200 transition text-sm;
+  }
+
+  .btn-danger {
+    @apply bg-white hover:bg-red-50 text-red-500 font-medium px-4 py-2 rounded-xl border border-red-200 transition text-sm;
+  }
+}
