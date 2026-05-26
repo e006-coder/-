@@ -1,0 +1,7 @@
+{
+  "buildCommand": "cd jewelry-calc-next && npm run build",
+  "outputDirectory": "jewelry-calc-next/.next",
+  "installCommand": "cd jewelry-calc-next && npm install",
+  "framework": "nextjs",
+  "rootDirectory": "jewelry-calc-next"
+}
