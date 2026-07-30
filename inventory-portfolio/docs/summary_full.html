@@ -1,0 +1,244 @@
+<title>在庫ポートフォリオ管理 サマリー</title>
+<style>
+  @page { size: A4; margin: 16mm 14mm; }
+  * { box-sizing: border-box; }
+  body {
+    font-family: "IPAGothic", "IPAPGothic", sans-serif;
+    color: #1a1a1a;
+    font-size: 10.5pt;
+    line-height: 1.55;
+    margin: 0;
+  }
+  h1 { font-size: 20pt; color: #1F4E78; margin: 0 0 2mm 0; }
+  .subtitle { color: #666; font-size: 10pt; margin: 0 0 8mm 0; }
+  h2 {
+    font-size: 12.5pt; color: #fff; background: #1F4E78;
+    padding: 2mm 3mm; margin: 8mm 0 3mm 0; border-radius: 1mm;
+  }
+  h3 { font-size: 11pt; color: #1F4E78; margin: 5mm 0 2mm 0; }
+  p { margin: 2mm 0; }
+  .cover { text-align: center; padding-top: 55mm; page-break-after: always; }
+  .cover h1 { font-size: 26pt; }
+  .cover .subtitle { font-size: 12pt; }
+  .cover .meta { margin-top: 40mm; color: #888; font-size: 9.5pt; }
+  table { width: 100%; border-collapse: collapse; margin: 2mm 0 4mm 0; font-size: 9.5pt; }
+  th, td { border: 0.3mm solid #ccc; padding: 1.6mm 2mm; text-align: left; vertical-align: top; }
+  th { background: #1F4E78; color: #fff; font-weight: normal; }
+  tr:nth-child(even) td { background: #f4f7fb; }
+  .quad-grid {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 3mm; margin: 3mm 0 5mm 0;
+  }
+  .quad-box {
+    border: 0.4mm solid #1F4E78; border-radius: 2mm; padding: 3mm 4mm;
+  }
+  .quad-box .name { font-weight: bold; color: #1F4E78; font-size: 11pt; margin-bottom: 1mm; }
+  .quad-box.core { background: #E9F4EA; }
+  .quad-box.turn { background: #FFF6E0; }
+  .quad-box.select { background: #E9F0FB; }
+  .quad-box.skip { background: #F3F3F3; }
+  .note { font-size: 9pt; color: #666; }
+  .badge {
+    display: inline-block; padding: 0.5mm 2mm; border-radius: 3mm; font-size: 8.5pt;
+    color: #fff; background: #1F4E78; margin-left: 2mm;
+  }
+  .week-header {
+    background: #1F4E78; color: #fff; padding: 2mm 3mm; font-size: 11pt; margin: 6mm 0 2mm 0;
+    border-radius: 1mm;
+  }
+  .day-table th.time { width: 20mm; }
+  .day-table th.date { width: 24mm; }
+  .goal { font-size: 9.5pt; color: #1F4E78; font-style: normal; margin: 0 0 2mm 0; }
+  .footer-note { font-size: 8.5pt; color: #888; margin-top: 3mm; }
+  .kpi-list td:first-child { width: 55mm; color: #1F4E78; }
+  .section-page { page-break-before: always; }
+</style>
+
+<div class="cover">
+  <h1>在庫ポートフォリオ管理</h1>
+  <p class="subtitle">スニダン等の転売在庫を4象限で管理するための運用サマリー</p>
+  <div class="meta">
+    作成日：2026年7月30日<br>
+    詳細な運用ブック：在庫ポートフォリオ管理.xlsx
+  </div>
+</div>
+
+<h1>1. 全体像</h1>
+<p class="subtitle">在庫を「流動性（早く売れるか）」×「収益性（利益率が高いか）」の2軸で4象限に分類し、仕入れ・在庫管理・KPI測定を一貫して回す。</p>
+
+<h2>4象限フレームワーク</h2>
+<div class="quad-grid">
+  <div class="quad-box core">
+    <div class="name">I. コア（高流動性 × 高収益）</div>
+    積極的に仕入れる中心銘柄。予算配分・在庫上限を厚めに確保する。
+  </div>
+  <div class="quad-box turn">
+    <div class="name">II. 回転（高流動性 × 低収益）</div>
+    資金回転を稼ぐ数量枠。単価上限を抑え、回転数で稼ぐ。
+  </div>
+  <div class="quad-box select">
+    <div class="name">III. 厳選（低流動性 × 高収益）</div>
+    資金拘束を許容できる範囲で少数厳選。上限点数を絞る。
+  </div>
+  <div class="quad-box skip">
+    <div class="name">IV. 見送り（低流動性 × 低収益）</div>
+    原則仕入れ見送り。ウォッチのみ継続し再評価を待つ。
+  </div>
+</div>
+<p class="note">判定しきい値（初期値）：想定売却日数 30日以内＝高流動性／想定粗利率 20%以上＝高収益。「設定」シートで事業実態に合わせて調整可能。</p>
+
+<h2>運用の流れ</h2>
+<table>
+  <tr><th style="width:12mm">①</th><td>ウォッチリスト — スニダン等の未仕入れ銘柄を登録すると自動で4象限に振り分け</td></tr>
+  <tr><th>②</th><td>仕入れ計画 — 象限ごとに「何を・いくらまで・どの属性なら仕入れるか」と予算配分を確定</td></tr>
+  <tr><th>③</th><td>在庫管理 — 実在庫を4分類＋タグ（キャラ／イラストレーター／絶版／周年／レアリティ）で登録</td></tr>
+  <tr><th>④</th><td>ダッシュボード — 資本効率・実行流動性・集中リスクを自動集計し、週次で確認</td></tr>
+</table>
+
+<div class="section-page"></div>
+<h1>2. 仕入れ計画（象限別ルール）の要点</h1>
+<table>
+  <tr><th>象限</th><th>方針</th><th>対象カテゴリ例</th><th>上限仕入単価</th><th>許容レアリティ</th><th>予算配分</th><th>在庫上限</th></tr>
+  <tr><td>I(コア)</td><td>積極的に仕入れる中心銘柄。優先確保。</td><td>フィギュア、スニーカー</td><td>¥50,000</td><td>S以上</td><td>50%</td><td>15点</td></tr>
+  <tr><td>II(回転)</td><td>資金回転重視。数量で稼ぐ。</td><td>トレーディングカード、アパレル</td><td>¥15,000</td><td>A以上</td><td>30%</td><td>40点</td></tr>
+  <tr><td>III(厳選)</td><td>少数厳選。資金拘束を許容できる範囲で。</td><td>フィギュア、アートトイ・グッズ</td><td>¥80,000</td><td>SS</td><td>15%</td><td>5点</td></tr>
+  <tr><td>IV(見送り)</td><td>原則仕入れ見送り。ウォッチのみ継続。</td><td>-</td><td>-</td><td>-</td><td>5%（予備）</td><td>0点</td></tr>
+</table>
+<p class="note">上記は初期設定値（月間仕入れ総予算：仮 ¥500,000）。「仕入れ計画」シートで事業実態に合わせて確定してください。</p>
+
+<h2>在庫管理・ポートフォリオ比率の考え方</h2>
+<p>在庫1点ごとに「カテゴリ」「キャラ」「イラストレーター」「絶版」「周年」「レアリティ」をタグ付けし、時価ベースでポートフォリオ構成比を自動計算する。特定のカテゴリ・キャラ・イラストレーターへの偏りは、集中リスク指標（HHI）で数値として可視化する。</p>
+<table class="kpi-list">
+  <tr><td>HHI（集中リスク指数）</td><td>Σ（構成比²）×10,000。1,500未満＝分散、1,500〜2,500＝中程度、2,500以上＝集中リスク高</td></tr>
+</table>
+
+<h2>ダッシュボードKPI</h2>
+<table class="kpi-list">
+  <tr><td>資本効率</td><td>総仕入額・総時価・含み損益・含み損益率(簡易ROI)・GMROI(簡易・時価÷仕入額)・在庫回転率(年換算)</td></tr>
+  <tr><td>実行流動性</td><td>高流動性しきい値以内の換金可能比率／滞留リスクしきい値超の滞留在庫比率／象限別（高流動性 I+II・低流動性 III+IV）の時価構成比</td></tr>
+  <tr><td>集中リスク</td><td>カテゴリ別・象限別・キャラ別・イラストレーター別のHHIを自動算出</td></tr>
+</table>
+<p class="footer-note">詳細な入力・数式・グラフは「在庫ポートフォリオ管理.xlsx」を参照。本サマリーは全体像の把握用です。</p>
+
+<div class="section-page"></div>
+<h1>3. 詳細スケジュール（8/3〜9/2・時間帯別タスク）</h1>
+<p class="subtitle">実務タスク1〜4を1か月の日次・時間帯別タスクに落とし込んだもの。平日は「朝会→作業ブロック①→作業ブロック②→夜の振り返り」、土曜は追い込み、日曜は週次振り返りを基本形とする。</p>
+<div class="week-header">Week1（8/3〜8/9）実務タスク1：ウォッチリスト4象限分類</div>
+<p class="goal">ゴール：設定シートを確定し、スニダンのウォッチリスト登録分を全件4象限に振り分ける</p>
+<table class="day-table"><tr><th class="date">日付</th><th class="time">時間</th><th>タスク</th></tr>
+<tr><td rowspan="4">8/3（月）</td><td>09:00-09:30</td><td>朝会：今週のゴール確認（ウォッチリスト全銘柄の4象限分類を完了する）</td></tr>
+<tr><td>10:00-12:00</td><td>「設定」シートの4象限しきい値・カテゴリ／レアリティマスタを事業実態に合わせて確定</td></tr>
+<tr><td>14:00-16:00</td><td>スニダンのウォッチリストを全件エクスポート</td></tr>
+<tr><td>20:00-20:30</td><td>振り返り：書き出し件数の確認、明日の入力対象を整理</td></tr>
+<tr><td rowspan="4">8/4（火）</td><td>09:00-09:30</td><td>朝会：本日の入力目標件数を設定</td></tr>
+<tr><td>10:00-12:00</td><td>ウォッチリストシートへ銘柄データ入力（前半）</td></tr>
+<tr><td>14:00-16:00</td><td>ウォッチリストシートへ銘柄データ入力（後半）</td></tr>
+<tr><td>20:00-20:30</td><td>振り返り：入力進捗の確認、情報が薄い銘柄をリストアップ</td></tr>
+<tr><td rowspan="4">8/5（水）</td><td>09:00-09:30</td><td>朝会</td></tr>
+<tr><td>10:00-12:00</td><td>想定売却日数・想定粗利率が未入力の銘柄の相場を追加調査・入力</td></tr>
+<tr><td>14:00-16:00</td><td>自動分類（4象限）結果を全件レビューし、外れ値をチェック</td></tr>
+<tr><td>20:00-20:30</td><td>振り返り</td></tr>
+<tr><td rowspan="4">8/6（木）</td><td>09:00-09:30</td><td>朝会</td></tr>
+<tr><td>10:00-12:00</td><td>象限別の候補数・偏りを確認し、しきい値（30日/20%）の妥当性を検証</td></tr>
+<tr><td>14:00-16:00</td><td>しきい値調整が必要なら「設定」シートを修正し、再分類結果を確認</td></tr>
+<tr><td>20:00-20:30</td><td>振り返り</td></tr>
+<tr><td rowspan="4">8/7（金）</td><td>09:00-09:30</td><td>朝会</td></tr>
+<tr><td>10:00-12:00</td><td>各象限の代表銘柄をピックアップし、方針との整合性を目視検証</td></tr>
+<tr><td>14:00-16:00</td><td>ウォッチリスト運用ルール（誰が・いつ新規銘柄を追加するか）を文書化</td></tr>
+<tr><td>20:00-20:30</td><td>週次振り返り準備</td></tr>
+<tr><td rowspan="1">8/8（土）</td><td>10:00-13:00</td><td>週内に処理しきれなかった銘柄の入力・分類の追い込み</td></tr>
+<tr><td rowspan="1">8/9（日）</td><td>19:00-19:30</td><td>週次振り返り：実務タスク1完了確認、来週（仕入れ計画）の準備</td></tr>
+</table>
+<div class="week-header">Week2（8/10〜8/16）実務タスク2：仕入れ計画策定</div>
+<p class="goal">ゴール：象限別の上限単価・許容属性・予算配分を確定し、仕入れ計画の運用を開始する</p>
+<table class="day-table"><tr><th class="date">日付</th><th class="time">時間</th><th>タスク</th></tr>
+<tr><td rowspan="4">8/10（月）</td><td>09:00-09:30</td><td>朝会：今週のゴール確認（仕入れ計画を確定し運用開始する）</td></tr>
+<tr><td>10:00-12:00</td><td>象限別「対象カテゴリ」「許容属性条件」をウォッチリスト分類結果を見ながら具体化</td></tr>
+<tr><td>14:00-16:00</td><td>象限別「上限仕入単価」を過去仕入実績・利益率から試算</td></tr>
+<tr><td>20:00-20:30</td><td>振り返り</td></tr>
+<tr><td rowspan="4">8/11（火）</td><td>09:00-09:30</td><td>朝会</td></tr>
+<tr><td>10:00-12:00</td><td>月間仕入れ総予算を確定（資金繰り・在庫余力から算出）</td></tr>
+<tr><td>14:00-16:00</td><td>象限別の予算配分比率を仮決定し「仕入れ計画」シートに反映</td></tr>
+<tr><td>20:00-20:30</td><td>振り返り</td></tr>
+<tr><td rowspan="4">8/12（水）</td><td>09:00-09:30</td><td>朝会</td></tr>
+<tr><td>10:00-12:00</td><td>象限別「在庫上限点数」を保管スペース・資金繰りから設定</td></tr>
+<tr><td>14:00-16:00</td><td>ウォッチリストの仕入れ候補数と予算配分を突き合わせ、実行可能性を確認</td></tr>
+<tr><td>20:00-20:30</td><td>振り返り</td></tr>
+<tr><td rowspan="4">8/13（木）</td><td>09:00-09:30</td><td>朝会</td></tr>
+<tr><td>10:00-12:00</td><td>仕入れ計画のドラフトをレビューし、矛盾点（予算超過等）を修正</td></tr>
+<tr><td>14:00-16:00</td><td>仕入れ判断フロー（誰が最終GOを出すか）を明文化</td></tr>
+<tr><td>20:00-20:30</td><td>振り返り</td></tr>
+<tr><td rowspan="4">8/14（金）</td><td>09:00-09:30</td><td>朝会</td></tr>
+<tr><td>10:00-12:00</td><td>仕入れ計画を確定・共有</td></tr>
+<tr><td>14:00-16:00</td><td>象限I(コア)候補から試験的に1〜2件、計画に沿って仕入れを実行</td></tr>
+<tr><td>20:00-20:30</td><td>振り返り</td></tr>
+<tr><td rowspan="1">8/15（土）</td><td>10:00-13:00</td><td>仕入れ計画の運用ルール整備の追い込み・来週の棚卸し対象リストアップ</td></tr>
+<tr><td rowspan="1">8/16（日）</td><td>19:00-19:30</td><td>週次振り返り：実務タスク2完了確認、来週（在庫管理）の準備</td></tr>
+</table>
+<div class="week-header">Week3（8/17〜8/23）実務タスク3：在庫管理シート運用開始</div>
+<p class="goal">ゴール：既存在庫を4分類＋タグで棚卸し登録し、ポートフォリオ比率と集中リスクを可視化する</p>
+<table class="day-table"><tr><th class="date">日付</th><th class="time">時間</th><th>タスク</th></tr>
+<tr><td rowspan="4">8/17（月）</td><td>09:00-09:30</td><td>朝会：今週のゴール確認（既存在庫の棚卸し登録を完了する）</td></tr>
+<tr><td>10:00-12:00</td><td>既存在庫の棚卸しリストアップ（保管場所・点数の洗い出し）</td></tr>
+<tr><td>14:00-16:00</td><td>在庫管理シートへ登録（カテゴリ・仕入値・現在時価入力、前半）</td></tr>
+<tr><td>20:00-20:30</td><td>振り返り</td></tr>
+<tr><td rowspan="4">8/18（火）</td><td>09:00-09:30</td><td>朝会</td></tr>
+<tr><td>10:00-12:00</td><td>在庫管理シートへ登録（後半）</td></tr>
+<tr><td>14:00-16:00</td><td>タグ付け（キャラ／イラストレーター／絶版／周年／レアリティ）</td></tr>
+<tr><td>20:00-20:30</td><td>振り返り</td></tr>
+<tr><td rowspan="4">8/19（水）</td><td>09:00-09:30</td><td>朝会</td></tr>
+<tr><td>10:00-12:00</td><td>タグ付けの継続、「設定」シートのキャラ／イラストレーター集計リストを実データに更新</td></tr>
+<tr><td>14:00-16:00</td><td>想定売却日数・レアリティ等、未入力項目の埋め合わせ</td></tr>
+<tr><td>20:00-20:30</td><td>振り返り</td></tr>
+<tr><td rowspan="4">8/20（木）</td><td>09:00-09:30</td><td>朝会</td></tr>
+<tr><td>10:00-12:00</td><td>ポートフォリオ比率・集中リスク（HHI）の初期値を確認し、異常値をチェック</td></tr>
+<tr><td>14:00-16:00</td><td>集中リスクが高いカテゴリ／キャラがあれば要因分析</td></tr>
+<tr><td>20:00-20:30</td><td>振り返り</td></tr>
+<tr><td rowspan="4">8/21（金）</td><td>09:00-09:30</td><td>朝会</td></tr>
+<tr><td>10:00-12:00</td><td>在庫データの週次更新ルール（誰が・いつ・何を更新するか）を決定・文書化</td></tr>
+<tr><td>14:00-16:00</td><td>在庫管理シートの運用リハーサル（新規仕入れ1件を実際に登録）</td></tr>
+<tr><td>20:00-20:30</td><td>振り返り</td></tr>
+<tr><td rowspan="1">8/22（土）</td><td>10:00-13:00</td><td>棚卸し登録の追い込み・データ精度チェック</td></tr>
+<tr><td rowspan="1">8/23（日）</td><td>19:00-19:30</td><td>週次振り返り：実務タスク3完了確認、来週（ダッシュボード）の準備</td></tr>
+</table>
+<div class="week-header">Week4（8/24〜8/30）実務タスク4：ダッシュボード運用</div>
+<p class="goal">ゴール：資本効率・実行流動性・集中リスクの指標を週次レビューに組み込む</p>
+<table class="day-table"><tr><th class="date">日付</th><th class="time">時間</th><th>タスク</th></tr>
+<tr><td rowspan="4">8/24（月）</td><td>09:00-09:30</td><td>朝会：今週のゴール確認（ダッシュボードを週次運用に組み込む）</td></tr>
+<tr><td>10:00-12:00</td><td>資本効率指標（総仕入額・総時価・含み損益・GMROI・在庫回転率）の初期値を確認</td></tr>
+<tr><td>14:00-16:00</td><td>実行流動性指標（換金可能比率・滞留比率）の初期値を確認</td></tr>
+<tr><td>20:00-20:30</td><td>振り返り</td></tr>
+<tr><td rowspan="4">8/25（火）</td><td>09:00-09:30</td><td>朝会</td></tr>
+<tr><td>10:00-12:00</td><td>集中リスク（カテゴリ／象限／キャラ／イラストレーター別HHI）を確認し対応方針を検討</td></tr>
+<tr><td>14:00-16:00</td><td>ダッシュボードのグラフ（ポートフォリオ構成・象限別時価）から気づきをメモ</td></tr>
+<tr><td>20:00-20:30</td><td>振り返り</td></tr>
+<tr><td rowspan="4">8/26（水）</td><td>09:00-09:30</td><td>朝会</td></tr>
+<tr><td>10:00-12:00</td><td>週次レビューMTGの型（アジェンダ・所要時間）を設計</td></tr>
+<tr><td>14:00-16:00</td><td>ダッシュボードの数値から仕入れ計画（予算配分）へのフィードバック項目を整理</td></tr>
+<tr><td>20:00-20:30</td><td>振り返り</td></tr>
+<tr><td rowspan="4">8/27（木）</td><td>09:00-09:30</td><td>朝会</td></tr>
+<tr><td>10:00-12:00</td><td>第1回・週次レビューMTGをダッシュボードを見ながら試験実施</td></tr>
+<tr><td>14:00-16:00</td><td>MTGで出た改善点を「仕入れ計画」「設定」シートに反映</td></tr>
+<tr><td>20:00-20:30</td><td>振り返り</td></tr>
+<tr><td rowspan="4">8/28（金）</td><td>09:00-09:30</td><td>朝会</td></tr>
+<tr><td>10:00-12:00</td><td>月次でしきい値・カテゴリ／タグ体系を見直すルールを文書化</td></tr>
+<tr><td>14:00-16:00</td><td>ダッシュボード運用マニュアル（誰が・いつ・何を見るか）を簡潔に整理</td></tr>
+<tr><td>20:00-20:30</td><td>振り返り</td></tr>
+<tr><td rowspan="1">8/29（土）</td><td>10:00-13:00</td><td>4シート（ウォッチリスト・仕入れ計画・在庫管理・ダッシュボード）の連携動作を通しで確認</td></tr>
+<tr><td rowspan="1">8/30（日）</td><td>19:00-19:30</td><td>週次振り返り：実務タスク4完了確認、来週（統合リハーサル）の準備</td></tr>
+</table>
+<div class="week-header">Week5（8/31〜9/2）統合リハーサル・本格運用開始</div>
+<p class="goal">ゴール：週次運用サイクルを1周させ、9月からの本格運用に備える</p>
+<table class="day-table"><tr><th class="date">日付</th><th class="time">時間</th><th>タスク</th></tr>
+<tr><td rowspan="4">8/31（月）</td><td>09:00-09:30</td><td>朝会：今週のゴール確認（週次運用サイクルを実際に1周させる）</td></tr>
+<tr><td>10:00-12:00</td><td>ウォッチリスト→仕入れ計画→在庫管理→ダッシュボードの週次サイクルを通しで実行（1周目）</td></tr>
+<tr><td>14:00-16:00</td><td>サイクルの所要時間・つまずいた点を洗い出す</td></tr>
+<tr><td>20:00-20:30</td><td>振り返り</td></tr>
+<tr><td rowspan="4">9/1（火）</td><td>09:00-09:30</td><td>朝会</td></tr>
+<tr><td>10:00-12:00</td><td>洗い出した課題の改善（シート修正・運用ルール調整）</td></tr>
+<tr><td>14:00-16:00</td><td>9月以降の週次運用カレンダーを確定</td></tr>
+<tr><td>20:00-20:30</td><td>振り返り</td></tr>
+<tr><td rowspan="4">9/2（水）</td><td>09:00-09:30</td><td>朝会</td></tr>
+<tr><td>10:00-12:00</td><td>最終確認・関係者への本格運用開始の共有</td></tr>
+<tr><td>14:00-15:00</td><td>本格運用開始宣言／9月の振り返り観点を設定</td></tr>
+<tr><td>20:00-20:30</td><td>1か月の振り返り（8/3〜9/2）</td></tr>
+</table>
