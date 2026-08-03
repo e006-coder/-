@@ -117,6 +117,13 @@ rows = [
     ("Step3", "「仕入れ計画」で象限別の上限単価・許容希少性／トレンド／ボラティリティ・予算配分を確定する。"),
     ("Step4", "「在庫管理」に実在庫を棚卸し登録し、ポートフォリオ比率と偏りリスクを確認する。"),
     ("Step5", "「ダッシュボード」を週次で確認し、仕入れ計画にフィードバックする。"),
+    ("■ 用語解説（投資フレームワーク検討資料に準拠）", None),
+    ("回転率", "一定期間内に在庫が何回入れ替わる（売れる）かを示す指標。本ブックでは 365日÷想定売却日数 で近似します。"),
+    ("資本効率", "投じた資金に対してどれだけ効率よく利益を生めるか。「想定粗利率×回転率」で近似し、ウォッチリスト・在庫管理シートに列を設けています。同じ象限内でカードを比較する際、この値が高いものを優先的に仕入れる基準になります。"),
+    ("実効流動性", "理論上の流動性（想定売却日数）から、ボラティリティによる値崩れリスクを差し引いた、実質的な換金力。本ブックでは「実効想定売却日数＝想定売却日数×ボラティリティ係数」で近似します（設定シートで係数を調整可能）。"),
+    ("ポジションサイズ目安", "「期待リターン（想定粗利率）÷ボラティリティ」で近似した、その銘柄をどれだけ厚く持ってよいかの目安スコア。同じ象限内でも、ボラティリティが高いものほど保有量を抑える判断に使います。"),
+    ("相関ドライバー", "複数の商材が同じ要因（キャラクター人気・絵師人気・収録弾の再販発表・周年企画等）で連動して値動きする際の共通要因。ジャンル（銘柄タイトル）が分散していても、同じキャラ・イラストレーター・企画に在庫が偏っていると、その人気が落ちた瞬間に在庫全体が一緒に値下がりするリスクがあります。ダッシュボードでキャラ別・イラストレーター別・企画/収録弾別・希少性帯別に偏りをチェックできます。"),
+    ("投資フレームワークとの対応", "本ブックの「コア／回転／厳選／見送り」は、社内の投資フレームワーク検討資料でいう「コアポジション／キャッシュ同等物／グロース枠／劣後在庫」にそれぞれ対応します（詳細は「設定」シートの4象限マスタ参照）。"),
     ("■ 注意事項", None),
     ("サンプル行", "各シートの数行はサンプル値です。実データ入力時は上書き、または不要なら内容を削除してください（数式は残しても構いません）。"),
     ("偏りリスク(HHI)", "特定のカテゴリ・キャラ・イラストレーターに在庫が偏っていないかを数値化したものです（集中度指数／HHI）。数値が大きいほど偏りが大きいことを意味します。目安：1,500未満＝分散、1,500〜2,500＝中程度、2,500以上＝偏りが大きい。"),
@@ -138,7 +145,7 @@ ws.row_dimensions[2].height = 24
 # 2. 設定
 # =====================================================================
 ws = sheet("設定")
-set_col_widths(ws, [3, 46, 16, 16, 40])
+set_col_widths(ws, [3, 46, 16, 16, 40, 20, 14])
 title(ws, "B2", "設定")
 note(ws, "B3", "4象限のしきい値とマスタデータ。事業実態に合わせて調整してください。")
 
@@ -157,13 +164,13 @@ for rr in (6, 7, 8):
     ws[f"B{rr}"].border = ws[f"C{rr}"].border = BORDER
 note(ws, "B9", "※ この2つのしきい値は象限の自動判定専用です。カードごとの仕入れ可否は「仕入れ計画」シートの希少性／トレンド／ボラティリティ条件で判断します。")
 
-section(ws, "B11", "■ 4象限マスタ（分類ロジック・方針の目安）")
-header_row(ws, 12, 2, ["象限コード", "早く売れる？", "利益率は高い？", "方針の目安"])
+section(ws, "B11", "■ 4象限マスタ（分類ロジック・方針の目安・投資フレームワークとの対応）")
+header_row(ws, 12, 2, ["象限コード", "早く売れる？", "利益率は高い？", "方針の目安", "投資フレームワークでの呼称", "資金配分の目安"])
 quad_master = [
-    ("I(コア)", "早い", "高い", "積極的に仕入れる中心銘柄。予算配分と在庫上限を厚めに。"),
-    ("II(回転)", "早い", "低い（薄利）", "資金回転を稼ぐ数量枠。単価上限を抑えて回転数で稼ぐ。"),
-    ("III(厳選)", "遅い", "高い", "資金拘束を許容できる範囲で少数厳選。上限点数を絞る。"),
-    ("IV(見送り)", "遅い", "低い（薄利）", "原則仕入れ見送り。ウォッチのみ継続し再評価を待つ。"),
+    ("I(コア)", "早い", "高い", "積極的に仕入れる中心銘柄。予算配分と在庫上限を厚めに。", "コアポジション（収益基盤）", 0.55),
+    ("II(回転)", "早い", "低い（薄利）", "資金回転を稼ぐ数量枠。単価上限を抑えて回転数で稼ぐ。", "キャッシュ同等物（リスクバッファ）", 0.20),
+    ("III(厳選)", "遅い", "高い", "資金拘束を許容できる範囲で少数厳選。上限点数を絞る。", "グロース枠（将来リターン）", 0.20),
+    ("IV(見送り)", "遅い", "低い（薄利）", "原則仕入れ見送り。ウォッチのみ継続し再評価を待つ。", "劣後在庫（排除対象）", 0.05),
 ]
 r = 13
 for row in quad_master:
@@ -172,7 +179,10 @@ for row in quad_master:
         c.font = BLACK
         c.border = BORDER
         c.alignment = Alignment(wrap_text=True, vertical="center")
+        if i == 5:
+            c.number_format = PCT
     r += 1
+note(ws, "B17", "※ 「投資フレームワークでの呼称」「資金配分の目安」は社内の投資フレームワーク検討資料（コア・サテライト型：コアが過半・劣後は最小限）を参考にした値です。「仕入れ計画」シートの予算配分比率の初期値として反映しています。")
 
 section(ws, "B18", "■ 銘柄タイトルマスタ（トレカのタイトル。在庫管理・ウォッチリストのプルダウンで使用）")
 header_row(ws, 19, 2, ["銘柄タイトル"])
@@ -207,16 +217,22 @@ for t in trends:
     r += 1
 TREND_RANGE = "設定!$B$37:$B$39"
 
-section(ws, "B41", "■ ボラティリティマスタ（価格の変動の荒さ）")
-header_row(ws, 42, 2, ["ボラティリティ"])
-vols = ["高", "中", "低"]
+section(ws, "B41", "■ ボラティリティマスタ（価格の変動の荒さ・実効流動性の計算に使用）")
+header_row(ws, 42, 2, ["ボラティリティ", "目減り係数"])
+vols = [("高", 1.5), ("中", 1.2), ("低", 1.0)]
 r = 43
-for v in vols:
+for v, factor in vols:
     ws.cell(row=r, column=2, value=v).font = BLUE
     ws.cell(row=r, column=2).fill = INPUT_FILL
     ws.cell(row=r, column=2).border = BORDER
+    ws.cell(row=r, column=3, value=factor).font = BLUE
+    ws.cell(row=r, column=3).fill = INPUT_FILL
+    ws.cell(row=r, column=3).border = BORDER
+    ws.cell(row=r, column=3).number_format = "0.00"
     r += 1
 VOL_RANGE = "設定!$B$43:$B$45"
+VOL_FACTOR_RANGE = "設定!$C$43:$C$45"
+note(ws, "B46", "※ 目減り係数：想定売却日数にこの係数を掛けて「実効想定売却日数」を算出します（値動きが荒いほど、安全に売り切るまでに実質的な時間がかかるとみなす）。")
 
 section(ws, "B47", "■ ステータスマスタ")
 header_row(ws, 48, 2, ["ステータス"])
@@ -253,17 +269,32 @@ for i in range(20):
     ws.cell(row=r, column=2).border = BORDER
 ILLUST_RANGE = f"設定!$B${ILLUST_START}:$B${ILLUST_START+19}"
 
-print("設定 sheet done:", CAT_RANGE, RARITY_RANGE, TREND_RANGE, VOL_RANGE, STATUS_RANGE, CHAR_RANGE, ILLUST_RANGE)
+section(ws, "B100", "■ 企画・収録弾 集中リスク集計対象リスト（相関ドライバー。収録弾／レアリティ帯／周年企画など、キャラ・イラストレーター以外で値動きが連動する要因。在庫管理シートで使う値を入力すると、ダッシュボードで自動集計されます。最大20件）")
+header_row(ws, 101, 2, ["企画・収録弾名"])
+sample_campaigns = ["スカーレット&バイオレット 151", "ROMANCE DAWN", "25周年記念"]
+CAMPAIGN_START = 102
+for i in range(20):
+    r = CAMPAIGN_START + i
+    v = sample_campaigns[i] if i < len(sample_campaigns) else ""
+    ws.cell(row=r, column=2, value=v).font = BLUE
+    ws.cell(row=r, column=2).fill = INPUT_FILL
+    ws.cell(row=r, column=2).border = BORDER
+CAMPAIGN_RANGE = f"設定!$B${CAMPAIGN_START}:$B${CAMPAIGN_START+19}"
+note(ws, f"B{CAMPAIGN_START+21}",
+     "※ 相関ドライバーとは、複数の商材が同じ要因（人気投票・映画出演・再販発表・環境トップ入り等）で連動して値動きする際の共通要因です。"
+     "ジャンル（銘柄タイトル）が分散していても、同じ収録弾・企画に在庫が偏っていると、その人気が落ちた瞬間に在庫全体が一緒に値下がりするリスクがあります。")
+
+print("設定 sheet done:", CAT_RANGE, RARITY_RANGE, TREND_RANGE, VOL_RANGE, STATUS_RANGE, CHAR_RANGE, ILLUST_RANGE, CAMPAIGN_RANGE)
 
 # =====================================================================
 # 3. ウォッチリスト
 # =====================================================================
 ws = sheet("ウォッチリスト")
 WL_COLS = ["No", "銘柄名", "銘柄タイトル", "希少性", "トレンド", "ボラティリティ",
-           "スニダン参考価格", "想定仕入値", "想定売却価格", "想定売却日数",
-           "想定粗利額", "想定粗利率", "象限", "仕入れ判定", "メモ"]
+           "スニダン参考価格", "想定仕入値", "想定売却価格", "想定売却日数", "実効想定売却日数",
+           "想定粗利額", "想定粗利率", "資本効率", "ポジションサイズ目安", "象限", "仕入れ判定", "メモ"]
 WC = cols(WL_COLS)
-set_col_widths(ws, [5, 24, 16, 10, 10, 12, 13, 12, 12, 12, 12, 12, 12, 16, 24])
+set_col_widths(ws, [5, 24, 16, 10, 10, 12, 13, 12, 12, 12, 14, 12, 12, 12, 14, 12, 16, 24])
 title(ws, "B2", "ウォッチリスト（4象限分類）")
 note(ws, "B3", "スニダン等のウォッチリスト登録分を入力すると、想定売却日数・想定粗利率から自動で4象限に振り分けます。青字セルのみ入力してください。")
 
@@ -285,7 +316,8 @@ for i, lab in enumerate(labels):
 
 wl_header_labels = ["No", "銘柄名", "銘柄タイトル", "希少性", "トレンド", "ボラティリティ",
                      "スニダン参考価格\n（現在相場）", "想定仕入値", "想定売却価格",
-                     "想定売却\n日数", "想定粗利額", "想定粗利率", "象限", "仕入れ判定", "メモ"]
+                     "想定売却\n日数", "実効想定売却\n日数（ボラ考慮）", "想定粗利額", "想定粗利率",
+                     "資本効率\n（利益率×回転率）", "ポジション\nサイズ目安", "象限", "仕入れ判定", "メモ"]
 header_row(ws, WL_HEADER_ROW, 1, wl_header_labels)
 ws.freeze_panes = f"A{WL_DATA_START}"
 
@@ -297,25 +329,23 @@ wl_samples = [
     ("人気シングル（遊戯王）", "遊戯王", "A", "上昇", "中", 12000, 10000, 11500, 10, ""),
     ("一般パック品（遊戯王）", "遊戯王", "C", "下降", "高", 3000, 2800, 2900, 90, ""),
 ]
-for i, (name, ttl, rarity, trend, vol, ref, buy, sell, days, memo) in enumerate(wl_samples):
+wl_sample_names = ["銘柄名", "銘柄タイトル", "希少性", "トレンド", "ボラティリティ",
+                    "スニダン参考価格", "想定仕入値", "想定売却価格", "想定売却日数", "メモ"]
+for i, values in enumerate(wl_samples):
     r = WL_DATA_START + i
-    ws.cell(row=r, column=2, value=name)
-    ws.cell(row=r, column=3, value=ttl)
-    ws.cell(row=r, column=4, value=rarity)
-    ws.cell(row=r, column=5, value=trend)
-    ws.cell(row=r, column=6, value=vol)
-    ws.cell(row=r, column=7, value=ref)
-    ws.cell(row=r, column=8, value=buy)
-    ws.cell(row=r, column=9, value=sell)
-    ws.cell(row=r, column=10, value=days)
-    ws.cell(row=r, column=15, value=memo)
+    for name, val in zip(wl_sample_names, values):
+        ws[f"{WC[name]}{r}"] = val
 
 for r in range(WL_DATA_START, WL_DATA_END + 1):
     B, H, I_, J, K, L, M, N = (WC["銘柄名"], WC["想定仕入値"], WC["想定売却価格"], WC["想定売却日数"],
                                WC["想定粗利額"], WC["想定粗利率"], WC["象限"], WC["仕入れ判定"])
+    Vc, Eff, Cap, Pos = WC["ボラティリティ"], WC["実効想定売却日数"], WC["資本効率"], WC["ポジションサイズ目安"]
     ws[f"{WC['No']}{r}"] = f'=IF({B}{r}="","",ROW()-{WL_DATA_START-1})'
     ws[f"{K}{r}"] = f'=IF({B}{r}="","",{I_}{r}-{H}{r})'
     ws[f"{L}{r}"] = f'=IF({B}{r}="","",IF({H}{r}=0,"",{K}{r}/{H}{r}))'
+    ws[f"{Eff}{r}"] = (f'=IF({B}{r}="","",{J}{r}*IFERROR(INDEX({VOL_FACTOR_RANGE},MATCH({Vc}{r},{VOL_RANGE},0)),1))')
+    ws[f"{Cap}{r}"] = f'=IF({B}{r}="","",IF({J}{r}=0,"",{L}{r}*365/{J}{r}))'
+    ws[f"{Pos}{r}"] = (f'=IF({B}{r}="","",IFERROR({L}{r}/INDEX({VOL_FACTOR_RANGE},MATCH({Vc}{r},{VOL_RANGE},0)),""))')
     ws[f"{M}{r}"] = (f'=IF({B}{r}="","",IF({J}{r}<=設定!$C$6,IF({L}{r}>=設定!$C$7,"I(コア)","II(回転)"),'
                       f'IF({L}{r}>=設定!$C$7,"III(厳選)","IV(見送り)")))')
     ws[f"{N}{r}"] = (f'=IF({B}{r}="","",IF(OR({M}{r}="I(コア)",{M}{r}="II(回転)"),"仕入れ候補",'
@@ -324,7 +354,8 @@ for r in range(WL_DATA_START, WL_DATA_END + 1):
         "No": (BLACK, INT), "銘柄名": (BLUE, None), "銘柄タイトル": (BLUE, None), "希少性": (BLUE, None),
         "トレンド": (BLUE, None), "ボラティリティ": (BLUE, None), "スニダン参考価格": (BLUE, CUR),
         "想定仕入値": (BLUE, CUR), "想定売却価格": (BLUE, CUR), "想定売却日数": (BLUE, '0"日"'),
-        "想定粗利額": (BLACK, CUR), "想定粗利率": (BLACK, PCT), "象限": (BLACK, None),
+        "実効想定売却日数": (BLACK, '0.0"日"'), "想定粗利額": (BLACK, CUR), "想定粗利率": (BLACK, PCT),
+        "資本効率": (BLACK, PCT), "ポジションサイズ目安": (BLACK, "0.00"), "象限": (BLACK, None),
         "仕入れ判定": (BLACK, None), "メモ": (BLUE, None),
     }
     for name, (font, fmt) in col_font_fmt.items():
@@ -346,6 +377,14 @@ dv_trend_wl.add(f"{WC['トレンド']}{WL_DATA_START}:{WC['トレンド']}{WL_DA
 dv_vol_wl.add(f"{WC['ボラティリティ']}{WL_DATA_START}:{WC['ボラティリティ']}{WL_DATA_END}")
 
 print("ウォッチリスト sheet done")
+
+# 在庫管理シートの列レイアウトは仕入れ計画から先に参照するため、ここで定義しておく
+# （実際のシート内容の作成は「5. 在庫管理」セクションで行う）
+INV_COLS = ["No", "商品名", "銘柄タイトル", "キャラ", "イラストレーター", "企画・収録弾", "絶版", "周年",
+            "希少性", "トレンド", "ボラティリティ", "ステータス", "仕入日", "仕入値",
+            "現在時価", "想定売却日数", "実効想定売却日数", "想定粗利額", "想定粗利率",
+            "資本効率", "ポジションサイズ目安", "象限", "ポートフォリオ比率", "メモ"]
+IC = cols(INV_COLS)
 
 # =====================================================================
 # 4. 仕入れ計画
@@ -375,11 +414,11 @@ header_row(ws, PLAN_HEADER_ROW, 1, PLAN_COLS)
 
 plan_rows = [
     ("I(コア)", "I(コア)", "積極的に仕入れる中心銘柄。優先確保。", "ポケモンカード、ワンピースカード", 50000,
-     "S以上", "上昇", "低〜中", 0.50, 15),
+     "S以上", "上昇", "低〜中", 0.55, 15),
     ("II(回転)", "II(回転)", "資金回転重視。数量で稼ぐ。", "遊戯王、デュエル・マスターズ", 15000,
-     "A以上", "上昇・安定", "指定なし", 0.30, 40),
+     "A以上", "上昇・安定", "指定なし", 0.20, 40),
     ("III(厳選)", "III(厳選)", "少数厳選。資金拘束を許容できる範囲で。", "ポケモンカード、ワンピースカード", 80000,
-     "SS", "上昇・安定", "低", 0.15, 5),
+     "SS", "上昇・安定", "低", 0.20, 5),
     ("IV(見送り)", "IV(見送り)", "原則仕入れ見送り。ウォッチのみ継続。", "-", 0,
      "-", "下降", "高", 0.05, 0),
 ]
@@ -397,7 +436,7 @@ for i, (code, label, policy, titles_ex, max_price, rarity, trend, vol, ratio, ca
     ws[f"{PC['予算配分金額']}{r}"] = f"=$C$5*{PC['予算配分比率']}{r}"
     ws[f"{PC['在庫上限点数']}{r}"] = cap
     ws[f"{PC['ウォッチ候補数']}{r}"] = f'=COUNTIF(ウォッチリスト!${WC["象限"]}${WL_DATA_START}:${WC["象限"]}${WL_DATA_END},"{code}")'
-    ws[f"{PC['現在庫点数']}{r}"] = f'=COUNTIF(在庫管理!$R${INV_DATA_START}:$R${INV_DATA_END},"{code}")'
+    ws[f"{PC['現在庫点数']}{r}"] = f'=COUNTIF(在庫管理!${IC["象限"]}${INV_DATA_START}:${IC["象限"]}${INV_DATA_END},"{code}")'
     fmt_map = {
         "象限": (BLACK, None, False), "呼称": (BLACK, None, False), "方針": (BLUE, None, False),
         "対象タイトル例": (BLUE, None, False), "上限仕入単価": (BLUE, CUR, True),
@@ -438,6 +477,9 @@ ws.conditional_formatting.add(
 )
 note(ws, f"B{TOTAL_ROW+2}", "※ 予算配分比率の合計は100%になるように調整してください（赤色表示は100%以外を意味します）。")
 note(ws, f"B{TOTAL_ROW+3}", "※ 許容希少性／許容トレンド／許容ボラティリティは、ウォッチリスト・在庫管理シートの各カードの値と見比べて仕入れ可否を判断するための基準です。")
+note(ws, f"B{TOTAL_ROW+4}",
+     "※ 予算配分の初期値（55%/20%/20%/5%）はコア・サテライト型投資の考え方（コアが過半・劣後は最小限）を参考にした値です。"
+     "同じ象限内でカードを選ぶ際は、ウォッチリスト・在庫管理シートの「資本効率」が高いものを優先し、「ポジションサイズ目安」が低いもの（＝ボラティリティが高いもの）は保有量を絞ってください。")
 
 print("仕入れ計画 sheet done")
 
@@ -445,11 +487,8 @@ print("仕入れ計画 sheet done")
 # 5. 在庫管理
 # =====================================================================
 ws = sheet("在庫管理")
-INV_COLS = ["No", "商品名", "銘柄タイトル", "キャラ", "イラストレーター", "絶版", "周年",
-            "希少性", "トレンド", "ボラティリティ", "ステータス", "仕入日", "仕入値",
-            "現在時価", "想定売却日数", "想定粗利額", "想定粗利率", "象限", "ポートフォリオ比率", "メモ"]
-IC = cols(INV_COLS)
-set_col_widths(ws, [5, 26, 14, 12, 14, 8, 8, 9, 9, 12, 10, 12, 11, 12, 11, 11, 11, 11, 12, 22])
+# INV_COLS / IC は「4. 仕入れ計画」セクションの手前で定義済み
+set_col_widths(ws, [5, 26, 14, 12, 14, 16, 8, 8, 9, 9, 12, 10, 12, 11, 12, 11, 14, 11, 11, 11, 14, 11, 12, 22])
 title(ws, "B2", "在庫管理シート（実在庫・ポートフォリオ管理）")
 note(ws, "B3", "青字セルのみ入力してください。ステータスが「在庫中」の行のみ、集計・ポートフォリオ比率に反映されます。")
 
@@ -469,26 +508,27 @@ for r, fmt in [(5, CUR), (6, CUR), (7, CUR), (8, PCT), (9, INT)]:
     ws.cell(row=r, column=3).border = BORDER
     ws.cell(row=r, column=3).number_format = fmt
 
-inv_header_labels = ["No", "商品名", "銘柄タイトル", "キャラ", "イラストレーター", "絶版", "周年",
-                      "希少性", "トレンド", "ボラティリティ", "ステータス", "仕入日", "仕入値",
-                      "現在時価\n（想定売却価格）", "想定売却\n日数", "想定粗利額", "想定粗利率",
+inv_header_labels = ["No", "商品名", "銘柄タイトル", "キャラ", "イラストレーター", "企画・収録弾\n（相関ドライバー）",
+                      "絶版", "周年", "希少性", "トレンド", "ボラティリティ", "ステータス", "仕入日", "仕入値",
+                      "現在時価\n（想定売却価格）", "想定売却\n日数", "実効想定売却\n日数（ボラ考慮）",
+                      "想定粗利額", "想定粗利率", "資本効率\n（利益率×回転率）", "ポジション\nサイズ目安",
                       "象限", "ポートフォリオ\n比率", "メモ"]
 header_row(ws, INV_HEADER_ROW, 1, inv_header_labels)
 ws.freeze_panes = f"A{INV_DATA_START}"
 
 inv_samples = [
-    ("リザードンVMAX（ポケモンカード）", "ポケモンカード", "リザードン", "サンプル絵師A", "×", "×",
-     "SS", "上昇", "低", "在庫中", "2026-06-15", 24000, 31000, 18, ""),
-    ("ルフィ SEC（ワンピースカード）", "ワンピースカード", "ルフィ", "", "×", "×",
-     "S", "上昇", "中", "在庫中", "2026-07-01", 16000, 18500, 12, ""),
-    ("青眼の白龍 初期（遊戯王）", "遊戯王", "青眼の白龍", "", "○", "×",
-     "SS", "安定", "低", "在庫中", "2026-05-20", 38000, 49000, 55, "絶版・入手困難"),
-    ("ピカチュウ プロモ（ポケモンカード）", "ポケモンカード", "ピカチュウ", "サンプル絵師B", "×", "○",
-     "A", "安定", "中", "受注済", "2026-07-10", 7000, 8300, 40, "周年記念"),
-    ("一般パック品（遊戯王）", "遊戯王", "", "", "×", "×",
-     "C", "下降", "高", "売却済", "2026-04-01", 2800, 2900, 90, ""),
+    ("リザードンVMAX（ポケモンカード）", "ポケモンカード", "リザードン", "サンプル絵師A", "スカーレット&バイオレット 151",
+     "×", "×", "SS", "上昇", "低", "在庫中", "2026-06-15", 24000, 31000, 18, ""),
+    ("ルフィ SEC（ワンピースカード）", "ワンピースカード", "ルフィ", "", "ROMANCE DAWN",
+     "×", "×", "S", "上昇", "中", "在庫中", "2026-07-01", 16000, 18500, 12, ""),
+    ("青眼の白龍 初期（遊戯王）", "遊戯王", "青眼の白龍", "", "初期弾",
+     "○", "×", "SS", "安定", "低", "在庫中", "2026-05-20", 38000, 49000, 55, "絶版・入手困難"),
+    ("ピカチュウ プロモ（ポケモンカード）", "ポケモンカード", "ピカチュウ", "サンプル絵師B", "25周年記念",
+     "×", "○", "A", "安定", "中", "受注済", "2026-07-10", 7000, 8300, 40, "周年記念"),
+    ("一般パック品（遊戯王）", "遊戯王", "", "", "",
+     "×", "×", "C", "下降", "高", "売却済", "2026-04-01", 2800, 2900, 90, ""),
 ]
-name_cols = ["商品名", "銘柄タイトル", "キャラ", "イラストレーター", "絶版", "周年",
+name_cols = ["商品名", "銘柄タイトル", "キャラ", "イラストレーター", "企画・収録弾", "絶版", "周年",
              "希少性", "トレンド", "ボラティリティ", "ステータス", "仕入日", "仕入値",
              "現在時価", "想定売却日数", "メモ"]
 for i, values in enumerate(inv_samples):
@@ -500,18 +540,24 @@ for r in range(INV_DATA_START, INV_DATA_END + 1):
     B = IC["商品名"]
     Kc, Nc, Oc, Pc, Qc, Rc, Sc = (IC["仕入値"], IC["現在時価"], IC["想定売却日数"], IC["想定粗利額"],
                                   IC["想定粗利率"], IC["象限"], IC["ポートフォリオ比率"])
+    Vc, Eff, Cap, Pos = IC["ボラティリティ"], IC["実効想定売却日数"], IC["資本効率"], IC["ポジションサイズ目安"]
     ws[f"{IC['No']}{r}"] = f'=IF({B}{r}="","",ROW()-{INV_DATA_START-1})'
     ws[f"{Pc}{r}"] = f'=IF({B}{r}="","",{Nc}{r}-{Kc}{r})'
     ws[f"{Qc}{r}"] = f'=IF({B}{r}="","",IF({Kc}{r}=0,"",{Pc}{r}/{Kc}{r}))'
+    ws[f"{Eff}{r}"] = (f'=IF({B}{r}="","",{Oc}{r}*IFERROR(INDEX({VOL_FACTOR_RANGE},MATCH({Vc}{r},{VOL_RANGE},0)),1))')
+    ws[f"{Cap}{r}"] = f'=IF({B}{r}="","",IF({Oc}{r}=0,"",{Qc}{r}*365/{Oc}{r}))'
+    ws[f"{Pos}{r}"] = (f'=IF({B}{r}="","",IFERROR({Qc}{r}/INDEX({VOL_FACTOR_RANGE},MATCH({Vc}{r},{VOL_RANGE},0)),""))')
     ws[f"{Rc}{r}"] = (f'=IF({B}{r}="","",IF({Oc}{r}<=設定!$C$6,IF({Qc}{r}>=設定!$C$7,"I(コア)","II(回転)"),'
                        f'IF({Qc}{r}>=設定!$C$7,"III(厳選)","IV(見送り)")))')
     ws[f"{Sc}{r}"] = f'=IF({B}{r}="","",IF({ST}{r}="在庫中",IF($C$6=0,"",{Nc}{r}/$C$6),""))'
     col_font_fmt = {
         "No": (BLACK, INT), "商品名": (BLUE, None), "銘柄タイトル": (BLUE, None), "キャラ": (BLUE, None),
-        "イラストレーター": (BLUE, None), "絶版": (BLUE, None), "周年": (BLUE, None),
+        "イラストレーター": (BLUE, None), "企画・収録弾": (BLUE, None), "絶版": (BLUE, None), "周年": (BLUE, None),
         "希少性": (BLUE, None), "トレンド": (BLUE, None), "ボラティリティ": (BLUE, None),
         "ステータス": (BLUE, None), "仕入日": (BLUE, DATE), "仕入値": (BLUE, CUR), "現在時価": (BLUE, CUR),
-        "想定売却日数": (BLUE, '0"日"'), "想定粗利額": (BLACK, CUR), "想定粗利率": (BLACK, PCT),
+        "想定売却日数": (BLUE, '0"日"'), "実効想定売却日数": (BLACK, '0.0"日"'),
+        "想定粗利額": (BLACK, CUR), "想定粗利率": (BLACK, PCT), "資本効率": (BLACK, PCT),
+        "ポジションサイズ目安": (BLACK, "0.00"),
         "象限": (BLACK, None), "ポートフォリオ比率": (BLACK, PCT), "メモ": (BLUE, None),
     }
     for name, (font, fmt) in col_font_fmt.items():
@@ -724,9 +770,103 @@ for col, fmt in [(7, None), (8, CUR), (9, PCT), (10, "0")]:
         c.number_format = fmt
 ill_risk_row = conc_total_row(ws, OTHER_ILL_ROW + 1, 7, ILL_TBL_START, OTHER_ILL_ROW)
 
+# --- 攻めと守りの評価（利益率×回転率 vs 流動性×ボラティリティ） ---
+section(ws, "B58", "■ 攻めと守りの評価（資本効率・実効流動性）")
+note(ws, "B59", "利益率×回転率＝「どれだけ稼ぐ力があるか」（攻めの評価・仕入れ優先順位の決定に使用）。"
+                "流動性×ボラティリティ＝「いざという時に安全に現金化できるか」（守りの評価・ポジションサイズの抑制判断に使用）。")
+kpi(ws, 60, "平均資本効率（利益率×回転率・時価加重）",
+    f'=IFERROR(SUMPRODUCT(({INV_I}="在庫中")*N({inv_range("資本効率")})*N({INV_L}))/$C$7,"")', PCT)
+kpi(ws, 61, "平均実効想定売却日数（ボラティリティ考慮・時価加重）",
+    f'=IFERROR(SUMPRODUCT(({INV_I}="在庫中")*N({inv_range("実効想定売却日数")})*N({INV_L}))/$C$7,"")', '0.0"日"')
+
+# --- 象限別 枚数構成比（分布傾向のチェック） ---
+section(ws, "B63", "■ 象限別 枚数構成比（分布傾向のチェック）")
+note(ws, "B64", "時価ではなく点数（枚数）ベースの構成比。一般的には「コアが薄い層、回転（キャッシュ同等物）が最大ボリューム、"
+                "厳選（グロース枠）が最少数・最高ボラ、見送り（劣後在庫）は低ボラで少量」という逆ピラミッド型になりやすい。")
+header_row(ws, 65, 2, ["象限", "点数（在庫中）", "構成比"])
+QCNT_START = 66
+for i, q in enumerate(quad_labels):
+    r = QCNT_START + i
+    ws.cell(row=r, column=2, value=q)
+    ws.cell(row=r, column=3, value=f'=COUNTIFS({INV_I},"在庫中",{INV_P},$B{r})')
+    ws.cell(row=r, column=4, value=f'=IFERROR($C{r}/$C${QCNT_START+4},"")')
+    for col, fmt in [(2, None), (3, INT), (4, PCT)]:
+        c = ws.cell(row=r, column=col)
+        c.font = BLACK
+        c.border = BORDER
+        if fmt:
+            c.number_format = fmt
+QCNT_END = QCNT_START + 3
+ws.cell(row=QCNT_END + 1, column=2, value="合計").font = BOLD
+ws.cell(row=QCNT_END + 1, column=3, value=f"=SUM(C{QCNT_START}:C{QCNT_END})")
+ws.cell(row=QCNT_END + 1, column=3).number_format = INT
+ws.cell(row=QCNT_END + 1, column=3).font = BOLD
+ws.cell(row=QCNT_END + 1, column=3).border = BORDER
+ws.cell(row=QCNT_END + 1, column=2).border = BORDER
+ws.cell(row=QCNT_END + 1, column=4, value=f"=SUM(D{QCNT_START}:D{QCNT_END})")
+ws.cell(row=QCNT_END + 1, column=4).number_format = PCT
+ws.cell(row=QCNT_END + 1, column=4).font = BOLD
+ws.cell(row=QCNT_END + 1, column=4).border = BORDER
+
+# --- 希少性帯別 偏りリスク（レアリティ帯単位の相関ドライバー） ---
+RARITY_TBL_HDR = 72
+RARITY_TBL_START = 73
+section(ws, f"B{RARITY_TBL_HDR-1}", "■ 希少性帯別・企画別 偏りリスク（相関ドライバー：収録弾・レアリティ帯・企画単位の集中を確認）")
+conc_table_header(ws, RARITY_TBL_HDR, 2, "希少性")
+for i in range(5):
+    r = RARITY_TBL_START + i
+    setrow = 29 + i
+    ws.cell(row=r, column=2, value=f"='設定'!B{setrow}")
+    ws.cell(row=r, column=3, value=f'=SUMIFS({INV_L},{INV_I},"在庫中",在庫管理!${IC["希少性"]}${INV_DATA_START}:${IC["希少性"]}${INV_DATA_END},$B{r})')
+    ws.cell(row=r, column=4, value=f'=IFERROR($C{r}/$C$7,"")')
+    ws.cell(row=r, column=5, value=f'=IFERROR($D{r}^2*10000,0)')
+    for col, fmt in [(2, None), (3, CUR), (4, PCT), (5, "0")]:
+        c = ws.cell(row=r, column=col)
+        c.font = BLACK
+        c.border = BORDER
+        if fmt:
+            c.number_format = fmt
+RARITY_TBL_END = RARITY_TBL_START + 4
+rarity_risk_row = conc_total_row(ws, RARITY_TBL_END + 1, 2, RARITY_TBL_START, RARITY_TBL_END)
+
+# --- 企画・収録弾別 偏りリスク（相関ドライバー、その他行含む） ---
+CAMP_TBL_HDR = RARITY_TBL_HDR
+CAMP_TBL_START = RARITY_TBL_START
+conc_table_header(ws, CAMP_TBL_HDR, 7, "企画・収録弾")
+INV_CAMP = inv_range("企画・収録弾")
+for i in range(20):
+    r = CAMP_TBL_START + i
+    setrow = CAMPAIGN_START + i
+    ws.cell(row=r, column=7, value=f"='設定'!B{setrow}")
+    ws.cell(row=r, column=8, value=f'=IF($G{r}="","",SUMIFS({INV_L},{INV_I},"在庫中",{INV_CAMP},$G{r}))')
+    ws.cell(row=r, column=9, value=f'=IFERROR($H{r}/$C$7,"")')
+    ws.cell(row=r, column=10, value=f'=IFERROR($I{r}^2*10000,0)')
+    for col, fmt in [(7, None), (8, CUR), (9, PCT), (10, "0")]:
+        c = ws.cell(row=r, column=col)
+        c.font = BLACK
+        c.border = BORDER
+        if fmt:
+            c.number_format = fmt
+OTHER_CAMP_ROW = CAMP_TBL_START + 20
+ws.cell(row=OTHER_CAMP_ROW, column=7, value="その他（未登録／タグなし）")
+ws.cell(row=OTHER_CAMP_ROW, column=8,
+        value=f'=MAX(0,SUMIFS({INV_L},{INV_I},"在庫中")-SUM(H{CAMP_TBL_START}:H{CAMP_TBL_START+19}))')
+ws.cell(row=OTHER_CAMP_ROW, column=9, value=f'=IFERROR($H{OTHER_CAMP_ROW}/$C$7,"")')
+ws.cell(row=OTHER_CAMP_ROW, column=10, value=f'=IFERROR($I{OTHER_CAMP_ROW}^2*10000,0)')
+for col, fmt in [(7, None), (8, CUR), (9, PCT), (10, "0")]:
+    c = ws.cell(row=OTHER_CAMP_ROW, column=col)
+    c.font = NOTE
+    c.border = BORDER
+    if fmt:
+        c.number_format = fmt
+camp_risk_row = conc_total_row(ws, OTHER_CAMP_ROW + 1, 7, CAMP_TBL_START, OTHER_CAMP_ROW)
+
+print("ダッシュボード 追加テーブル done, risk rows:", rarity_risk_row, camp_risk_row)
+
 # 3-color scale conditional formatting on 偏りスコア columns
 for col_letter, start, end in [("E", CAT_TBL_START, CAT_TBL_END), ("J", QUAD_TBL_START, QUAD_TBL_END),
-                                ("E", CHAR_TBL_START, OTHER_CHAR_ROW), ("J", ILL_TBL_START, OTHER_ILL_ROW)]:
+                                ("E", CHAR_TBL_START, OTHER_CHAR_ROW), ("J", ILL_TBL_START, OTHER_ILL_ROW),
+                                ("E", RARITY_TBL_START, RARITY_TBL_END), ("J", CAMP_TBL_START, OTHER_CAMP_ROW)]:
     rng = f"{col_letter}{start}:{col_letter}{end}"
     ws.conditional_formatting.add(
         rng,
