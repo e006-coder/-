@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
-"""Build the detailed Aug 3 - Sep 2 daily/hourly schedule (tasks 1-4) and render it
-into both the PDF summary (HTML fragment) and an Obsidian-ready markdown note."""
+"""Build the detailed Aug 3 - Sep 2 daily/hourly schedule (tasks 1-4) as an
+Obsidian-ready markdown note. Kept separate from the portfolio xlsx/PDF by design."""
 import datetime
 import os
 
@@ -212,27 +212,6 @@ def date_jp(date_str):
     return f"{d.month}/{d.day}（{WEEKDAY_JP[d.weekday()]}）"
 
 
-def build_html():
-    parts = ['<div class="section-page"></div>', "<h1>3. 詳細スケジュール（8/3〜9/2・時間帯別タスク）</h1>",
-             '<p class="subtitle">実務タスク1〜4を1か月の日次・時間帯別タスクに落とし込んだもの。'
-             '平日は「朝会→作業ブロック①→作業ブロック②→夜の振り返り」、土曜は追い込み、日曜は週次振り返りを基本形とする。</p>']
-    for week in WEEKS:
-        parts.append(f'<div class="week-header">{week["label"]}</div>')
-        parts.append(f'<p class="goal">ゴール：{week["goal"]}</p>')
-        parts.append('<table class="day-table"><tr><th class="date">日付</th><th class="time">時間</th><th>タスク</th></tr>')
-        for date_str, blocks in week["days"]:
-            for i, (time, task) in enumerate(blocks):
-                if i == 0:
-                    parts.append(
-                        f'<tr><td rowspan="{len(blocks)}">{date_jp(date_str)}</td>'
-                        f'<td>{time}</td><td>{task}</td></tr>'
-                    )
-                else:
-                    parts.append(f'<tr><td>{time}</td><td>{task}</td></tr>')
-        parts.append("</table>")
-    return "\n".join(parts)
-
-
 def build_obsidian_md():
     lines = [
         "---",
@@ -277,15 +256,7 @@ def build_obsidian_md():
 
 if __name__ == "__main__":
     base = os.path.dirname(__file__)
-    html_fragment = build_html()
-    with open(os.path.join(base, "summary.html")) as f:
-        content = f.read()
-    content = content.replace("SCHEDULE_PLACEHOLDER", html_fragment)
-    with open(os.path.join(base, "summary_full.html"), "w") as f:
-        f.write(content)
-
     md = build_obsidian_md()
     with open(os.path.join(base, "obsidian", "スケジュール_8月.md"), "w") as f:
         f.write(md)
-
-    print("wrote summary_full.html and obsidian/スケジュール_8月.md")
+    print("wrote obsidian/スケジュール_8月.md")
