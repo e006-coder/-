@@ -299,7 +299,9 @@ function sumMatchingStock_(products, cardName) {
 }
 
 /**
- * カード名がタイトルに含まれる商品の中で、一番安い現在の出品価格(salePrice)を返す。
+ * カード名がタイトルに含まれる商品の中で、一番安い「現在出品中(売り切れではない)」の
+ * 出品価格(salePrice)を返す。売り切れ済み(stockFromGeneralUsers=0)の出品は、
+ * 既に買えない価格なので除外する。
  * 呼び出し側で検索キーワードに「PSA10」を含めていれば、ここで渡ってくる products は
  * PSA10表記の商品だけになっているため、実質PSA10限定の最安値になる。
  * 一致する商品が無ければ null を返す。
@@ -307,9 +309,10 @@ function sumMatchingStock_(products, cardName) {
 function findMatchingMinPrice_(products, cardName) {
   var minPrice = null;
   for (var i = 0; i < products.length; i++) {
-    if (products[i].title && products[i].title.indexOf(cardName) !== -1 && products[i].price !== null) {
-      if (minPrice === null || products[i].price < minPrice) {
-        minPrice = products[i].price;
+    var p = products[i];
+    if (p.title && p.title.indexOf(cardName) !== -1 && p.price !== null && p.stock !== null && p.stock > 0) {
+      if (minPrice === null || p.price < minPrice) {
+        minPrice = p.price;
       }
     }
   }
