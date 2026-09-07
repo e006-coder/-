@@ -200,6 +200,22 @@ function addMercariLinkColumn() {
 }
 
 /**
+ * 今開いているシートのD列(メルカリ検索列)の中身を、実際の最終行まで数式で上書きし直す。
+ * 手動でのコピー&ペースト等によって、数式ではなく結果の文字列だけになってしまった
+ * セルを直したいときに使う(D列の中身は全て上書きされる)。
+ */
+function refillMercariLinkFormulas() {
+  var sheet = SpreadsheetApp.getActiveSheet();
+  var lastRow = Math.max(sheet.getLastRow(), 1000);
+  var numRows = lastRow - 3 + 1;
+
+  var formulaR1C1 =
+    '=IF(R[0]C[-2]="","",HYPERLINK("https://jp.mercari.com/search?keyword="&R[0]C[-2]' +
+    '&IF(R[0]C[-1]="","", " "&R[0]C[-1])&"&status=on_sale","🛒 検索"))';
+  sheet.getRange(3, 4, numRows, 1).setFormulaR1C1(formulaR1C1);
+}
+
+/**
  * 今開いているシートの進捗記録を消して、次の実行を最初の行(3行目)からやり直せるようにする。
  */
 function resetListingCheckProgress() {
