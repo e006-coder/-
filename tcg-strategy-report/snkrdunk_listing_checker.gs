@@ -1,7 +1,8 @@
 /**
  * Google Sheets (カード管理シート) 用 Apps Script
- * B列=カード名, C列=型番, D列=スニダン検索リンク(HYPERLINK数式) を前提に、
- * E列に現在の出品数、F列に「前回チェック時より増えていたら✓」を書き込む。
+ * B列=カード名, C列=型番, D列=メルカリ検索リンク, E列=スニダン検索リンク(HYPERLINK数式) を前提に、
+ * F列に現在の出品数、G列に「前回チェック時より増えていたら✓」を書き込む。
+ * (出品数・出品増加を書き込む列番号は COL_STOCK / COL_FLAG で変更できる)
  *
  * 手動で使う場合:
  *   1. 対象のシートを開いた状態で checkNewListings を実行する
@@ -14,6 +15,13 @@
  *   5. 複数のシート(ブランドごと)に手動で適用したい場合は、コードは変更せず、
  *      シートを切り替えてから同じ関数を実行し直すだけでよい
  *      (進捗はシートごとに個別に記録されるので、シート間で干渉しない)
+ *
+ * メルカリ検索列を追加する場合:
+ *   addMercariLinkColumn をシートごとに手動実行するとC列とD列の間に列が挿入される
+ *   (既存のD/E/F列はE/F/G列にずれる)。トリガーが有効なまま全シート分の作業を
+ *   終える前に自動実行が走ると列がズレたままの状態で書き込まれてしまうので、
+ *   作業前に一旦トリガーを削除し、全シートの列挿入とCOL_STOCK/COL_FLAGの更新を終えてから
+ *   トリガーを設定し直すこと。
  *
  * 自動化する場合(トリガー):
  *   checkNewListingsAllSheets をトリガーに登録すると、
@@ -52,6 +60,8 @@
 
 var LISTING_CHECK_TIME_BUDGET_MS = 4 * 60 * 1000; // 手動実行1回あたりの打ち切り時間
 var LISTING_CHECK_ALL_SHEETS_BUDGET_MS = 5 * 60 * 1000; // トリガー実行1回(全シート合計)の打ち切り時間
+var COL_STOCK = 6; // 出品数を書き込む列(F列)
+var COL_FLAG = 7; // 出品増加(✓)を書き込む列(G列)
 
 /**
  * 手動実行用: 今開いているシートだけをチェックする。
@@ -111,9 +121,9 @@ function processSheetBatch_(sheet, deadline, maxRowsThisTurn) {
   var progressKey = "SNKR_ROW_" + sheet.getSheetId();
   var startRow = parseInt(props.getProperty(progressKey), 10) || 3;
 
-  if (sheet.getRange(2, 5).getValue() !== "出品数") {
-    sheet.getRange(2, 5).setValue("出品数");
-    sheet.getRange(2, 6).setValue("出品増加");
+  if (sheet.getRange(2, COL_STOCK).getValue() !== "出品数") {
+    sheet.getRange(2, COL_STOCK).setValue("出品数");
+    sheet.getRange(2, COL_FLAG).setValue("出品増加");
   }
 
   var processedCount = 0;
@@ -138,21 +148,21 @@ function processSheetBatch_(sheet, deadline, maxRowsThisTurn) {
       var products = extractProducts_(html);
       var currentStock = sumMatchingStock_(products, cardName);
 
-      var prevStock = sheet.getRange(row, 5).getValue();
+      var prevStock = sheet.getRange(row, COL_STOCK).getValue();
 
       if (currentStock === null) {
-        sheet.getRange(row, 5).setValue("該当なし");
-        sheet.getRange(row, 6).setValue("");
+        sheet.getRange(row, COL_STOCK).setValue("該当なし");
+        sheet.getRange(row, COL_FLAG).setValue("");
       } else {
         if (typeof prevStock === "number" && currentStock > prevStock) {
-          sheet.getRange(row, 6).setValue("✓");
+          sheet.getRange(row, COL_FLAG).setValue("✓");
         } else {
-          sheet.getRange(row, 6).setValue("");
+          sheet.getRange(row, COL_FLAG).setValue("");
         }
-        sheet.getRange(row, 5).setValue(currentStock);
+        sheet.getRange(row, COL_STOCK).setValue(currentStock);
       }
     } catch (e) {
-      sheet.getRange(row, 6).setValue("エラー");
+      sheet.getRange(row, COL_FLAG).setValue("エラー");
     }
 
     processedCount++;
@@ -166,6 +176,27 @@ function processSheetBatch_(sheet, deadline, maxRowsThisTurn) {
     props.setProperty(progressKey, String(row)); // ここまで終わったので続きの行を記録
     return false;
   }
+}
+
+/**
+ * 今開いているシートのC列とD列の間に「メルカリ検索」列を挿入する(1シートずつ手動実行する想定)。
+ * 既に追加済みのシートで実行しても何もしない(二重挿入を防ぐ)。
+ * 実行後は既存のD/E/F列がE/F/G列にずれるので、
+ * COL_STOCK / COL_FLAG が新しい列番号(F=6, G=7)を指すようにしてから使うこと。
+ */
+function addMercariLinkColumn() {
+  var sheet = SpreadsheetApp.getActiveSheet();
+  if (sheet.getRange(2, 4).getValue() === "メルカリ検索") {
+    return; // 既に追加済み
+  }
+
+  sheet.insertColumnBefore(4); // D列の前に挿入(既存のD/E/F列は右に1つずれる)
+  sheet.getRange(2, 4).setValue("メルカリ検索");
+
+  var formulaR1C1 =
+    '=IF(R[0]C[-2]="","",HYPERLINK("https://jp.mercari.com/search?keyword="&R[0]C[-2]' +
+    '&IF(R[0]C[-1]="","", " "&R[0]C[-1])&"&status=on_sale","🛒 検索"))';
+  sheet.getRange(3, 4, 998, 1).setFormulaR1C1(formulaR1C1);
 }
 
 /**
