@@ -3,18 +3,34 @@
  * B列=カード名, C列=型番, D列=スニダン検索リンク(HYPERLINK数式) を前提に、
  * E列に現在の出品数、F列に「前回チェック時より増えていたら✓」を書き込む。
  *
- * 使い方:
- *   1. 対象のシートを開いた状態でこの関数 checkNewListings を実行する
+ * 手動で使う場合:
+ *   1. 対象のシートを開いた状態で checkNewListings を実行する
  *   2. 初回実行時は E列に出品数が入るだけ（F列の✓判定は2回目以降から機能する）
  *   3. カードが多いシートは1回の実行(最大6分)では終わらないことがある。
  *      その場合は自動的に途中で止まり、続きの行を記憶しておくので、
  *      もう一度「実行」を押せばその続きから再開する。
  *      最後まで終わったシートは、次に実行するとまた最初の行から始まる。
  *   4. 進捗をリセットして最初からやり直したい場合は resetListingCheckProgress を実行する
- *   5. トリガー(時計アイコン)で時間主導型トリガーを設定すると自動実行できる
- *   6. 複数のシート(ブランドごと)に適用したい場合は、コードは変更せず、
+ *   5. 複数のシート(ブランドごと)に手動で適用したい場合は、コードは変更せず、
  *      シートを切り替えてから同じ関数を実行し直すだけでよい
  *      (進捗はシートごとに個別に記録されるので、シート間で干渉しない)
+ *
+ * 自動化する場合(トリガー):
+ *   checkNewListingsAllSheets をトリガーに登録すると、
+ *   ヘッダー行(2行目)のB列が「カード名」になっている全シートを自動で順番にチェックする。
+ *   1回の実行(最大6分)で全カードを回りきれない場合は、途中で打ち切って
+ *   次回の実行(次のトリガー発火時)で続きから再開する。
+ *   1日1回だと全カード(900枚近く)を一周するのに数日かかるため、
+ *   午前・午後で1日2回トリガーを設定する運用にしている。
+ *   トリガーの設定方法:
+ *     1. Apps Scriptエディタ左側の時計アイコン「トリガー」を開く
+ *     2. 右下の「トリガーを追加」をクリック
+ *     3. 実行する関数を選択: checkNewListingsAllSheets
+ *     4. イベントのソース: 時間主導型 / 時間ベースのタイマー / 日付ベースのタイマー
+ *     5. 時刻を選択(例: 午前8時〜9時)
+ *     6. 保存
+ *     7. もう一度「トリガーを追加」して、同じ関数で別の時間帯(例: 午後3時〜4時)を追加する
+ *   これで1日2回、自動的にE列・F列が更新されるようになる。
  *
  * 対応済みの条件フィルタ調査:
  *   商品の状態(状態A/B/C等)で絞り込んだ在庫数を取ろうとしたが、
@@ -31,15 +47,46 @@
  *   タイトル一致で絞り込むことで、無関係な商品(ランキング枠等)の数字を拾わないようにしている。
  */
 
-var LISTING_CHECK_TIME_BUDGET_MS = 4 * 60 * 1000; // 4分経過したら打ち切り、続きは次回の実行で
+var LISTING_CHECK_TIME_BUDGET_MS = 4 * 60 * 1000; // 手動実行1回あたりの打ち切り時間
+var LISTING_CHECK_ALL_SHEETS_BUDGET_MS = 5 * 60 * 1000; // トリガー実行1回(全シート合計)の打ち切り時間
 
+/**
+ * 手動実行用: 今開いているシートだけをチェックする。
+ */
 function checkNewListings() {
   var sheet = SpreadsheetApp.getActiveSheet();
+  var deadline = new Date().getTime() + LISTING_CHECK_TIME_BUDGET_MS;
+  processSheetBatch_(sheet, deadline);
+}
+
+/**
+ * 自動実行(トリガー)用: ヘッダーが「カード名」になっている全シートを順番にチェックする。
+ * 1回の実行時間内に全部終わらなければ、途中で止めて次回のトリガー実行で続きから再開する。
+ */
+function checkNewListingsAllSheets() {
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var sheets = ss.getSheets();
+  var deadline = new Date().getTime() + LISTING_CHECK_ALL_SHEETS_BUDGET_MS;
+
+  for (var i = 0; i < sheets.length; i++) {
+    if (new Date().getTime() > deadline) break;
+
+    var sheet = sheets[i];
+    if (sheet.getRange(2, 2).getValue() !== "カード名") continue; // カード一覧シート以外はスキップ
+
+    processSheetBatch_(sheet, deadline);
+  }
+}
+
+/**
+ * 指定シートの、前回の続きの行からdeadline(ミリ秒のタイムスタンプ)まで処理する。
+ * 進捗(どこまで終わったか)はシートごとにドキュメントプロパティへ記録する。
+ */
+function processSheetBatch_(sheet, deadline) {
   var lastRow = sheet.getLastRow();
   var props = PropertiesService.getDocumentProperties();
   var progressKey = "SNKR_ROW_" + sheet.getSheetId();
   var startRow = parseInt(props.getProperty(progressKey), 10) || 3;
-  var startTime = new Date().getTime();
 
   if (sheet.getRange(2, 5).getValue() !== "出品数") {
     sheet.getRange(2, 5).setValue("出品数");
@@ -48,7 +95,7 @@ function checkNewListings() {
 
   var row;
   for (row = startRow; row <= lastRow; row++) {
-    if (new Date().getTime() - startTime > LISTING_CHECK_TIME_BUDGET_MS) {
+    if (new Date().getTime() > deadline) {
       break; // 時間切れ。続きは次回の実行でこの行から再開する
     }
 
@@ -96,7 +143,7 @@ function checkNewListings() {
 }
 
 /**
- * このシートの進捗記録を消して、次の実行を最初の行(3行目)からやり直せるようにする。
+ * 今開いているシートの進捗記録を消して、次の実行を最初の行(3行目)からやり直せるようにする。
  */
 function resetListingCheckProgress() {
   var sheet = SpreadsheetApp.getActiveSheet();
