@@ -2,10 +2,12 @@
  * Google Sheets (カード管理シート) 用 Apps Script
  * B列=カード名, C列=型番, D列=メルカリ検索リンク, E列=スニダン検索リンク(HYPERLINK数式) を前提に、
  * F列に現在の出品数、G列に「前回チェック時より増えていたら✓」、
- * H列に現在の最安出品価格が指定の価格帯(40万〜75万円 / 25万〜40万円)に入っているかを書き込む。
+ * H列にPSA10限定の現在の最安出品価格が指定の価格帯(40万〜75万円 / 25万〜40万円)に
+ * 入っているかを書き込む。
  * (書き込み先の列番号は COL_STOCK / COL_FLAG / COL_PRICE_BAND で変更できる)
- * ※H列の価格帯はPSA10限定の価格ではなく、検索結果の中でカード名が一致する商品の
- *   「現在の最安出品価格」を代わりに使った近似値(状態別の価格は取得できないため)。
+ * ※H列はPSA10限定の価格。検索キーワードに「PSA10」を加えて別途もう一度検索することで
+ *   絞り込んでいる(SNKRDUNKの検索はキーワードでタイトルを絞り込むため、これで対応できた)。
+ *   このためカード1件につき通信が2回になり、全カードを一周する時間も従来の約2倍になる。
  *
  * 手動で使う場合:
  *   1. 対象のシートを開いた状態で checkNewListings を実行する
@@ -36,6 +38,8 @@
  *   次回の実行(次のトリガー発火時)で続きから再開する。
  *   1日1回だと全カード(900枚近く)を一周するのに数日かかるため、
  *   午前・午後で1日2回トリガーを設定する運用にしている。
+ *   (PSA10価格帯チェックの追加により1件あたりの通信が2回になったため、
+ *   一周にかかる日数は従来より伸びる)
  *   トリガーの設定方法:
  *     1. Apps Scriptエディタ左側の時計アイコン「トリガー」を開く
  *     2. 右下の「トリガーを追加」をクリック
@@ -47,12 +51,14 @@
  *   これで1日2回、自動的にE列・F列が更新されるようになる。
  *
  * 対応済みの条件フィルタ調査:
- *   商品の状態(状態A/B/C等)で絞り込んだ在庫数を取ろうとしたが、
- *   状態別の一覧ページ(/apparels/{id}/used?conditionIds=...)はVue.jsで
- *   クライアント側からAPIを呼んで描画する方式のため、
- *   検索結果ページのように初期HTMLに埋め込まれておらず、単純な取得はできなかった。
- *   検索ページ側にconditionIdsを付けても絞り込みは効かないことを確認済み。
- *   そのため出品数は「全ての商品状態を合計した数」として扱う。
+ *   商品の状態(状態A/B/C等、生カードの傷の少なさを表す独自区分)で絞り込んだ在庫数を
+ *   取ろうとしたが、状態別の一覧ページ(/apparels/{id}/used?conditionIds=...)はVue.jsで
+ *   クライアント側からAPIを呼んで描画する方式のため、検索結果ページのように初期HTMLに
+ *   埋め込まれておらず、単純な取得はできなかった。検索ページ側にconditionIdsを付けても
+ *   絞り込みは効かないことを確認済み。そのため出品数は「全ての商品状態を合計した数」として扱う。
+ *   一方でPSA10のような鑑定会社のグレードは、商品タイトル自体に「PSA10」という文字が
+ *   含まれる別商品として登録されているため、検索キーワードに「PSA10」を加えるだけで
+ *   タイトル側で絞り込める(H列の価格帯はこの方法でPSA10限定にできている)。
  *
  * 出品数の取得方法:
  *   snkrdunk.com の検索結果ページ(/search?keywords=...)は、Next.jsのSSR初期HTMLに
@@ -129,8 +135,8 @@ function processSheetBatch_(sheet, deadline, maxRowsThisTurn) {
     sheet.getRange(2, COL_STOCK).setValue("出品数");
     sheet.getRange(2, COL_FLAG).setValue("出品増加");
   }
-  if (sheet.getRange(2, COL_PRICE_BAND).getValue() !== "価格帯(近似)") {
-    sheet.getRange(2, COL_PRICE_BAND).setValue("価格帯(近似)");
+  if (sheet.getRange(2, COL_PRICE_BAND).getValue() !== "PSA10価格帯") {
+    sheet.getRange(2, COL_PRICE_BAND).setValue("PSA10価格帯");
   }
 
   var processedCount = 0;
@@ -154,7 +160,6 @@ function processSheetBatch_(sheet, deadline, maxRowsThisTurn) {
 
       var products = extractProducts_(html);
       var currentStock = sumMatchingStock_(products, cardName);
-      var minPrice = findMatchingMinPrice_(products, cardName);
 
       var prevStock = sheet.getRange(row, COL_STOCK).getValue();
 
@@ -169,10 +174,23 @@ function processSheetBatch_(sheet, deadline, maxRowsThisTurn) {
         }
         sheet.getRange(row, COL_STOCK).setValue(currentStock);
       }
-
-      sheet.getRange(row, COL_PRICE_BAND).setValue(priceBandLabel_(minPrice));
     } catch (e) {
       sheet.getRange(row, COL_FLAG).setValue("エラー");
+    }
+
+    Utilities.sleep(1500); // サーバーに負荷をかけすぎないよう待機
+
+    // PSA10限定の価格を調べるため、検索キーワードに「PSA10」を加えてもう一度検索する
+    // (SNKRDUNKの検索はキーワードでタイトルを絞り込むため、これだけでPSA10表記の商品だけに絞れる)
+    try {
+      var psa10Url = "https://snkrdunk.com/search?keywords=" + encodeURIComponent(keyword + " PSA10");
+      var psa10Html = UrlFetchApp.fetch(psa10Url, { muteHttpExceptions: true }).getContentText();
+      var psa10Products = extractProducts_(psa10Html);
+      var psa10MinPrice = findMatchingMinPrice_(psa10Products, cardName);
+
+      sheet.getRange(row, COL_PRICE_BAND).setValue(priceBandLabel_(psa10MinPrice));
+    } catch (e2) {
+      sheet.getRange(row, COL_PRICE_BAND).setValue("エラー");
     }
 
     processedCount++;
