@@ -300,7 +300,8 @@ function sumMatchingStock_(products, cardName) {
 
 /**
  * カード名がタイトルに含まれる商品の中で、一番安い現在の出品価格(salePrice)を返す。
- * PSA10限定の価格ではなく「現在の最安出品価格」であり、条件(状態)を絞り込めない制約上の近似値。
+ * 呼び出し側で検索キーワードに「PSA10」を含めていれば、ここで渡ってくる products は
+ * PSA10表記の商品だけになっているため、実質PSA10限定の最安値になる。
  * 一致する商品が無ければ null を返す。
  */
 function findMatchingMinPrice_(products, cardName) {
