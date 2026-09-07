@@ -17,7 +17,10 @@
  *
  * 自動化する場合(トリガー):
  *   checkNewListingsAllSheets をトリガーに登録すると、
- *   ヘッダー行(2行目)のB列が「カード名」になっている全シートを自動で順番にチェックする。
+ *   ヘッダー行(2行目)のB列が「カード名」になっている全シートを自動でチェックする。
+ *   カードが多いシート(例: ポケモン)だけで実行時間を使い切って他のシートに
+ *   順番が回らなくなることがないよう、1シートにつき一度に最大
+ *   LISTING_CHECK_ROWS_PER_TURN 件ずつ進める「ラウンドロビン」方式にしている。
  *   1回の実行(最大6分)で全カードを回りきれない場合は、途中で打ち切って
  *   次回の実行(次のトリガー発火時)で続きから再開する。
  *   1日1回だと全カード(900枚近く)を一周するのに数日かかるため、
@@ -59,30 +62,50 @@ function checkNewListings() {
   processSheetBatch_(sheet, deadline);
 }
 
+var LISTING_CHECK_ROWS_PER_TURN = 15; // ラウンドロビン1巡で1シートあたり何件進めるか
+
 /**
- * 自動実行(トリガー)用: ヘッダーが「カード名」になっている全シートを順番にチェックする。
+ * 自動実行(トリガー)用: ヘッダーが「カード名」になっている全シートを、
+ * 1シートずつ最後まで終わらせるのではなく、少しずつ・順番に(ラウンドロビン方式で)進める。
+ * こうしないと、カード数が多いシート(例: ポケモン)だけで実行時間を使い切ってしまい、
+ * 他のシートにいつまでも順番が回ってこなくなるため。
  * 1回の実行時間内に全部終わらなければ、途中で止めて次回のトリガー実行で続きから再開する。
  */
 function checkNewListingsAllSheets() {
   var ss = SpreadsheetApp.getActiveSpreadsheet();
-  var sheets = ss.getSheets();
+  var sheets = ss.getSheets().filter(function (sheet) {
+    return sheet.getRange(2, 2).getValue() === "カード名"; // カード一覧シートだけを対象にする
+  });
+
   var deadline = new Date().getTime() + LISTING_CHECK_ALL_SHEETS_BUDGET_MS;
+  var finishedThisRun = {}; // この実行中に最後まで終わったシート(同じ実行中に最初へ巻き戻さないため)
 
-  for (var i = 0; i < sheets.length; i++) {
-    if (new Date().getTime() > deadline) break;
+  while (new Date().getTime() < deadline) {
+    var progressedAny = false;
 
-    var sheet = sheets[i];
-    if (sheet.getRange(2, 2).getValue() !== "カード名") continue; // カード一覧シート以外はスキップ
+    for (var i = 0; i < sheets.length; i++) {
+      if (new Date().getTime() > deadline) break;
 
-    processSheetBatch_(sheet, deadline);
+      var sheet = sheets[i];
+      var key = sheet.getSheetId();
+      if (finishedThisRun[key]) continue; // このシートはこの実行中にもう完了している
+
+      var completed = processSheetBatch_(sheet, deadline, LISTING_CHECK_ROWS_PER_TURN);
+      progressedAny = true;
+      if (completed) finishedThisRun[key] = true;
+    }
+
+    if (!progressedAny) break; // 対象シートが全部この実行中に完了した
   }
 }
 
 /**
- * 指定シートの、前回の続きの行からdeadline(ミリ秒のタイムスタンプ)まで処理する。
+ * 指定シートの、前回の続きの行から処理する。
+ * deadline(ミリ秒のタイムスタンプ)に達するか、maxRowsThisTurn件処理したら打ち切る。
  * 進捗(どこまで終わったか)はシートごとにドキュメントプロパティへ記録する。
+ * 戻り値: シートの最後の行まで到達していれば true、途中で打ち切った場合は false。
  */
-function processSheetBatch_(sheet, deadline) {
+function processSheetBatch_(sheet, deadline, maxRowsThisTurn) {
   var lastRow = sheet.getLastRow();
   var props = PropertiesService.getDocumentProperties();
   var progressKey = "SNKR_ROW_" + sheet.getSheetId();
@@ -93,15 +116,15 @@ function processSheetBatch_(sheet, deadline) {
     sheet.getRange(2, 6).setValue("出品増加");
   }
 
+  var processedCount = 0;
   var row;
   for (row = startRow; row <= lastRow; row++) {
-    if (new Date().getTime() > deadline) {
-      break; // 時間切れ。続きは次回の実行でこの行から再開する
-    }
+    if (new Date().getTime() > deadline) break; // 時間切れ
+    if (maxRowsThisTurn && processedCount >= maxRowsThisTurn) break; // この巡の件数上限に到達
 
     var cardName = sheet.getRange(row, 2).getValue(); // B列
     var modelNumber = sheet.getRange(row, 3).getValue(); // C列
-    if (!cardName) continue; // 空行はスキップ
+    if (!cardName) continue; // 空行はスキップ(件数にはカウントしない)
 
     var keyword = cardName;
     if (modelNumber && modelNumber !== "型番無し" && modelNumber !== "(型番なし)") {
@@ -132,13 +155,16 @@ function processSheetBatch_(sheet, deadline) {
       sheet.getRange(row, 6).setValue("エラー");
     }
 
+    processedCount++;
     Utilities.sleep(1500); // サーバーに負荷をかけすぎないよう待機
   }
 
   if (row > lastRow) {
     props.deleteProperty(progressKey); // 最後の行まで終わったので、次回はまた最初から
+    return true;
   } else {
     props.setProperty(progressKey, String(row)); // ここまで終わったので続きの行を記録
+    return false;
   }
 }
 
