@@ -1,8 +1,11 @@
 /**
  * Google Sheets (カード管理シート) 用 Apps Script
  * B列=カード名, C列=型番, D列=メルカリ検索リンク, E列=スニダン検索リンク(HYPERLINK数式) を前提に、
- * F列に現在の出品数、G列に「前回チェック時より増えていたら✓」を書き込む。
- * (出品数・出品増加を書き込む列番号は COL_STOCK / COL_FLAG で変更できる)
+ * F列に現在の出品数、G列に「前回チェック時より増えていたら✓」、
+ * H列に現在の最安出品価格が指定の価格帯(40万〜75万円 / 25万〜40万円)に入っているかを書き込む。
+ * (書き込み先の列番号は COL_STOCK / COL_FLAG / COL_PRICE_BAND で変更できる)
+ * ※H列の価格帯はPSA10限定の価格ではなく、検索結果の中でカード名が一致する商品の
+ *   「現在の最安出品価格」を代わりに使った近似値(状態別の価格は取得できないため)。
  *
  * 手動で使う場合:
  *   1. 対象のシートを開いた状態で checkNewListings を実行する
@@ -62,6 +65,7 @@ var LISTING_CHECK_TIME_BUDGET_MS = 4 * 60 * 1000; // 手動実行1回あたり�
 var LISTING_CHECK_ALL_SHEETS_BUDGET_MS = 5 * 60 * 1000; // トリガー実行1回(全シート合計)の打ち切り時間
 var COL_STOCK = 6; // 出品数を書き込む列(F列)
 var COL_FLAG = 7; // 出品増加(✓)を書き込む列(G列)
+var COL_PRICE_BAND = 8; // 価格帯を書き込む列(H列)
 
 /**
  * 手動実行用: 今開いているシートだけをチェックする。
@@ -125,6 +129,9 @@ function processSheetBatch_(sheet, deadline, maxRowsThisTurn) {
     sheet.getRange(2, COL_STOCK).setValue("出品数");
     sheet.getRange(2, COL_FLAG).setValue("出品増加");
   }
+  if (sheet.getRange(2, COL_PRICE_BAND).getValue() !== "価格帯(近似)") {
+    sheet.getRange(2, COL_PRICE_BAND).setValue("価格帯(近似)");
+  }
 
   var processedCount = 0;
   var row;
@@ -147,6 +154,7 @@ function processSheetBatch_(sheet, deadline, maxRowsThisTurn) {
 
       var products = extractProducts_(html);
       var currentStock = sumMatchingStock_(products, cardName);
+      var minPrice = findMatchingMinPrice_(products, cardName);
 
       var prevStock = sheet.getRange(row, COL_STOCK).getValue();
 
@@ -161,6 +169,8 @@ function processSheetBatch_(sheet, deadline, maxRowsThisTurn) {
         }
         sheet.getRange(row, COL_STOCK).setValue(currentStock);
       }
+
+      sheet.getRange(row, COL_PRICE_BAND).setValue(priceBandLabel_(minPrice));
     } catch (e) {
       sheet.getRange(row, COL_FLAG).setValue("エラー");
     }
@@ -243,9 +253,11 @@ function extractProducts_(html) {
     var end = (i + 1 < matches.length) ? matches[i + 1].index : Math.min(html.length, start + 2000);
     var chunk = html.substring(start, end);
     var stockMatch = chunk.match(/\\"stockFromGeneralUsers\\":(\d+)/);
+    var priceMatch = chunk.match(/\\"salePrice\\":(\d+)/);
     products.push({
       title: matches[i].title,
-      stock: stockMatch ? parseInt(stockMatch[1], 10) : null
+      stock: stockMatch ? parseInt(stockMatch[1], 10) : null,
+      price: priceMatch ? parseInt(priceMatch[1], 10) : null
     });
   }
   return products;
@@ -266,4 +278,32 @@ function sumMatchingStock_(products, cardName) {
     }
   }
   return found ? total : null;
+}
+
+/**
+ * カード名がタイトルに含まれる商品の中で、一番安い現在の出品価格(salePrice)を返す。
+ * PSA10限定の価格ではなく「現在の最安出品価格」であり、条件(状態)を絞り込めない制約上の近似値。
+ * 一致する商品が無ければ null を返す。
+ */
+function findMatchingMinPrice_(products, cardName) {
+  var minPrice = null;
+  for (var i = 0; i < products.length; i++) {
+    if (products[i].title && products[i].title.indexOf(cardName) !== -1 && products[i].price !== null) {
+      if (minPrice === null || products[i].price < minPrice) {
+        minPrice = products[i].price;
+      }
+    }
+  }
+  return minPrice;
+}
+
+/**
+ * 価格(円)を、指定の2つの価格帯のどちらかに当てはめてラベルを返す。
+ * どちらにも当てはまらない(価格が取れない場合を含む)場合は空文字を返す。
+ */
+function priceBandLabel_(price) {
+  if (price === null) return "";
+  if (price >= 400000 && price <= 750000) return "40万〜75万円";
+  if (price >= 250000 && price < 400000) return "25万〜40万円";
+  return "";
 }
