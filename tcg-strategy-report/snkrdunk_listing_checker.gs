@@ -6,7 +6,12 @@
  * 使い方:
  *   1. 対象のシートを開いた状態でこの関数 checkNewListings を実行する
  *   2. 初回実行時は E列に出品数が入るだけ（F列の✓判定は2回目以降から機能する）
- *   3. トリガー(時計アイコン)で時間主導型トリガーを設定すると自動実行できる
+ *   3. カードが多いシートは1回の実行(最大6分)では終わらないことがある。
+ *      その場合は自動的に途中で止まり、続きの行を記憶しておくので、
+ *      もう一度「実行」を押せばその続きから再開する。
+ *      最後まで終わったシートは、次に実行するとまた最初の行から始まる。
+ *   4. 進捗をリセットして最初からやり直したい場合は resetListingCheckProgress を実行する
+ *   5. トリガー(時計アイコン)で時間主導型トリガーを設定すると自動実行できる
  *
  * 出品数の取得方法:
  *   snkrdunk.com の検索結果ページ(/search?keywords=...)は、Next.jsのSSR初期HTMLに
@@ -15,16 +20,27 @@
  *   タイトル一致で絞り込むことで、無関係な商品(ランキング枠等)の数字を拾わないようにしている。
  */
 
+var LISTING_CHECK_TIME_BUDGET_MS = 4 * 60 * 1000; // 4分経過したら打ち切り、続きは次回の実行で
+
 function checkNewListings() {
   var sheet = SpreadsheetApp.getActiveSheet();
   var lastRow = sheet.getLastRow();
+  var props = PropertiesService.getDocumentProperties();
+  var progressKey = "SNKR_ROW_" + sheet.getSheetId();
+  var startRow = parseInt(props.getProperty(progressKey), 10) || 3;
+  var startTime = new Date().getTime();
 
   if (sheet.getRange(2, 5).getValue() !== "出品数") {
     sheet.getRange(2, 5).setValue("出品数");
     sheet.getRange(2, 6).setValue("出品増加");
   }
 
-  for (var row = 3; row <= lastRow; row++) {
+  var row;
+  for (row = startRow; row <= lastRow; row++) {
+    if (new Date().getTime() - startTime > LISTING_CHECK_TIME_BUDGET_MS) {
+      break; // 時間切れ。続きは次回の実行でこの行から再開する
+    }
+
     var cardName = sheet.getRange(row, 2).getValue(); // B列
     var modelNumber = sheet.getRange(row, 3).getValue(); // C列
     if (!cardName) continue; // 空行はスキップ
@@ -60,6 +76,21 @@ function checkNewListings() {
 
     Utilities.sleep(1500); // サーバーに負荷をかけすぎないよう待機
   }
+
+  if (row > lastRow) {
+    props.deleteProperty(progressKey); // 最後の行まで終わったので、次回はまた最初から
+  } else {
+    props.setProperty(progressKey, String(row)); // ここまで終わったので続きの行を記録
+  }
+}
+
+/**
+ * このシートの進捗記録を消して、次の実行を最初の行(3行目)からやり直せるようにする。
+ */
+function resetListingCheckProgress() {
+  var sheet = SpreadsheetApp.getActiveSheet();
+  var props = PropertiesService.getDocumentProperties();
+  props.deleteProperty("SNKR_ROW_" + sheet.getSheetId());
 }
 
 /**
