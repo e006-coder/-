@@ -1,0 +1,1403 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+</head>
+<body>
+<title>宝石早見帖</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<meta name="theme-color" content="#14161B">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="宝石早見帖">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Shippori+Mincho+B1:wght@600;800&family=Zen+Kaku+Gothic+New:wght@400;500;700&family=IBM+Plex+Mono:wght@500&display=swap">
+<style>
+/* Layout: 片手で使う図鑑。上に検索、下にタブ。1カラム（最大 720px）で、石ごとに「査定カード」を縦に積む */
+:root{
+  --bg:#EEF0F2;          /* 鑑別トレーの灰白 */
+  --surface:#FFFFFF;
+  --sunk:#E3E6EA;
+  --ink:#16181D;
+  --muted:#5A616E;
+  --line:#D5D9DF;
+  --accent:#8A6A1F;      /* ルーペの真鍮 */
+  --accent-ink:#FFFFFF;
+  --accent-soft:#F1E7CF;
+  --good:#256F47; --good-soft:#DDF0E4;
+  --warn:#9A5B0B; --warn-soft:#FBEBD3;
+  --bad:#A32A22;  --bad-soft:#F8DEDA;
+  --info:#2D4F86; --info-soft:#DFE7F5;
+  --f-display:"Shippori Mincho B1","Hiragino Mincho ProN","Yu Mincho",serif;
+  --f-body:"Zen Kaku Gothic New","Hiragino Sans","Yu Gothic",system-ui,sans-serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,"SFMono-Regular",Menlo,monospace;
+  --r:12px;
+  --tab-h:60px;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0E0F12; --surface:#17191E; --sunk:#202329; --ink:#ECEDEF; --muted:#9CA2AD; --line:#2B2F37;
+  --accent:#D8B867; --accent-ink:#17140A; --accent-soft:#3A3120;
+  --good:#7FD3A2; --good-soft:#163222; --warn:#F0B969; --warn-soft:#3A2A12; --bad:#F2928A; --bad-soft:#3E1A17; --info:#9DB8EA; --info-soft:#1B2740;
+  color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0E0F12; --surface:#17191E; --sunk:#202329; --ink:#ECEDEF; --muted:#9CA2AD; --line:#2B2F37;
+  --accent:#D8B867; --accent-ink:#17140A; --accent-soft:#3A3120;
+  --good:#7FD3A2; --good-soft:#163222; --warn:#F0B969; --warn-soft:#3A2A12; --bad:#F2928A; --bad-soft:#3E1A17; --info:#9DB8EA; --info-soft:#1B2740;
+  color-scheme:dark}
+
+*{box-sizing:border-box}
+html,body{background:var(--bg)}
+body{color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.7;-webkit-text-size-adjust:100%;
+  padding-bottom:calc(var(--tab-h) + env(safe-area-inset-bottom,0px) + 16px)}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--bg)}
+.wrap{max-width:720px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+h1,h2,h3{text-wrap:balance;margin:0}
+button,input{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:6px}
+.mono{font-family:var(--f-mono);font-variant-numeric:tabular-nums;letter-spacing:.01em}
+.muted{color:var(--muted)}
+.eyebrow{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);font-weight:700}
+
+/* top bar */
+.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);border-bottom:1px solid var(--line)}
+.top .wrap{display:flex;align-items:center;gap:12px;padding-block:10px}
+.brand{font-family:var(--f-display);font-weight:800;font-size:20px;letter-spacing:.04em;white-space:nowrap}
+.brand small{font-family:var(--f-body);font-weight:500;font-size:11px;color:var(--muted);letter-spacing:.08em;margin-left:6px}
+.top .spacer{flex:1}
+.iconbtn{border:1px solid var(--line);background:var(--surface);border-radius:999px;width:36px;height:36px;display:grid;place-items:center;cursor:pointer}
+.iconbtn svg{width:18px;height:18px}
+
+/* bottom tabs */
+.tabs{position:fixed;left:0;right:0;bottom:0;z-index:6;background:var(--surface);border-top:1px solid var(--line);
+  padding-bottom:env(safe-area-inset-bottom,0px);padding-left:env(safe-area-inset-left,0px);padding-right:env(safe-area-inset-right,0px)}
+.tabs nav{max-width:720px;margin:0 auto;display:grid;grid-template-columns:repeat(5,1fr);height:var(--tab-h)}
+.tabs a{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;text-decoration:none;color:var(--muted);font-size:11px;font-weight:500}
+.tabs a svg{width:22px;height:22px}
+.tabs a[aria-current="page"]{color:var(--accent);font-weight:700}
+
+main{padding-block:16px}
+section.view{display:flex;flex-direction:column;gap:16px}
+
+/* search + chips */
+.search{display:flex;align-items:center;gap:8px;background:var(--surface);border:1px solid var(--line);border-radius:999px;padding:8px 14px}
+.search svg{width:18px;height:18px;color:var(--muted);flex:none}
+.search input{border:0;background:transparent;outline:none;flex:1;min-width:0;font-size:16px}
+.chips{display:flex;gap:6px;overflow-x:auto;padding-bottom:2px;scrollbar-width:none}
+.chips::-webkit-scrollbar{display:none}
+.chip{flex:none;border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:4px 12px;font-size:13px;cursor:pointer;display:inline-flex;align-items:center;gap:6px;white-space:nowrap}
+.chip[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.chip .dot{width:10px;height:10px;border-radius:50%;border:1px solid rgba(127,127,127,.4)}
+
+/* gem list */
+.count{font-size:12px;color:var(--muted)}
+.list{display:flex;flex-direction:column;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);overflow:hidden}
+.row{display:grid;grid-template-columns:48px 1fr auto;gap:12px;align-items:center;padding:12px 14px;text-decoration:none;color:inherit;border-top:1px solid var(--line)}
+.row:first-child{border-top:0}
+.row:active{background:var(--sunk)}
+.row .name{font-family:var(--f-display);font-weight:800;font-size:17px;line-height:1.35}
+.row .sub{font-size:12px;color:var(--muted);line-height:1.5}
+.row .meta{text-align:right;font-size:11px;color:var(--muted);line-height:1.5}
+.row .meta b{display:block;font-family:var(--f-mono);font-weight:500;color:var(--ink);font-size:12px}
+.row > div{min-width:0}
+.groupHead{padding:8px 14px;background:var(--sunk);font-size:12px;font-weight:700;color:var(--muted);letter-spacing:.06em;border-top:1px solid var(--line)}
+.groupHead:first-child{border-top:0}
+.gemicon{width:48px;height:48px;display:block}
+
+/* detail */
+.back{display:inline-flex;align-items:center;gap:4px;color:var(--muted);text-decoration:none;font-size:13px}
+.hero{display:grid;grid-template-columns:88px 1fr;gap:16px;align-items:center}
+.hero .gemicon{width:88px;height:88px}
+.hero h1{font-family:var(--f-display);font-weight:800;font-size:clamp(24px,6.4vw,32px);line-height:1.25}
+.hero .en{color:var(--muted);font-size:13px}
+.tag{display:inline-block;font-size:11px;font-weight:700;padding:1px 8px;border-radius:999px;background:var(--sunk);color:var(--muted);margin-top:6px}
+.tag.add{background:var(--info-soft);color:var(--info)}
+.keyline{background:var(--accent-soft);border-radius:var(--r);padding:12px 14px;font-weight:500}
+.keyline .eyebrow{color:var(--accent);display:block;margin-bottom:2px}
+
+.spec{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:1px;background:var(--line);border:1px solid var(--line);border-radius:var(--r);overflow:hidden}
+.spec div{background:var(--surface);padding:10px 12px;min-width:0}
+.spec dt{font-size:11px;color:var(--muted);font-weight:700;letter-spacing:.04em}
+.spec dd{margin:0;font-size:14px;line-height:1.45;overflow-wrap:anywhere}
+.spec .wide{grid-column:1/-1}
+@media (max-width:420px){.spec div{padding:8px 10px}.spec dd{font-size:13px}}
+
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:14px 16px;display:flex;flex-direction:column;gap:10px;min-width:0}
+.card h2{font-size:16px;font-weight:700;display:flex;align-items:center;gap:8px}
+.card h2 .n{font-family:var(--f-mono);font-size:11px;color:var(--accent);border:1px solid var(--accent);border-radius:4px;padding:0 5px;font-weight:500}
+.card ul{margin:0;padding-left:1.1em;display:flex;flex-direction:column;gap:6px}
+.card li{padding-left:2px}
+.card p{margin:0}
+.kv{display:grid;grid-template-columns:7.5em 1fr;gap:4px 12px;font-size:14px}
+.kv dt{color:var(--muted);font-weight:700;font-size:12px;padding-top:2px}
+.kv dd{margin:0;min-width:0}
+
+.tr{display:flex;flex-direction:column;gap:2px;padding:10px 0;border-top:1px dashed var(--line)}
+.tr:first-of-type{border-top:0;padding-top:0}
+.tr .h{display:flex;flex-wrap:wrap;align-items:center;gap:6px 8px}
+.tr .nm{font-weight:700}
+.tr .note{font-size:13px;color:var(--muted)}
+.kind{font-size:11px;font-weight:700;border-radius:4px;padding:0 6px;line-height:20px}
+.kind.E{background:var(--good-soft);color:var(--good)}
+.kind.T{background:var(--bad-soft);color:var(--bad)}
+.kind.A{background:var(--warn-soft);color:var(--warn)}
+.kind.N{background:var(--info-soft);color:var(--info)}
+.imp{display:inline-flex;align-items:center;gap:4px;font-size:11px;color:var(--muted)}
+.imp i{display:inline-block;width:8px;height:8px;border-radius:2px;background:var(--sunk)}
+.imp[data-l="1"] i:nth-child(-n+1),.imp[data-l="2"] i:nth-child(-n+2),.imp[data-l="3"] i:nth-child(-n+3){background:var(--bad)}
+.imp[data-l="0"] i:first-child{background:var(--good)}
+
+.origin{display:flex;flex-direction:column}
+.origin div{display:grid;grid-template-columns:minmax(6.5em,34%) 1fr;gap:12px;padding:8px 0;border-top:1px solid var(--line);font-size:14px}
+.origin div:first-child{border-top:0;padding-top:0}
+.origin b{font-weight:700}
+
+.tbl{overflow-x:auto;border:1px solid var(--line);border-radius:8px}
+table{border-collapse:collapse;width:100%;font-size:13px}
+th,td{padding:7px 10px;text-align:left;border-top:1px solid var(--line);vertical-align:top}
+thead th{border-top:0;background:var(--sunk);font-size:11px;color:var(--muted);font-weight:700;white-space:nowrap}
+td.num,th.num{text-align:right;font-family:var(--f-mono);font-variant-numeric:tabular-nums;white-space:nowrap}
+
+.idx{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}
+.idx div{background:var(--sunk);border-radius:8px;padding:8px;text-align:center}
+.idx span{display:block;font-size:10px;color:var(--muted);font-weight:700}
+.idx b{font-family:var(--f-mono);font-weight:500;font-size:15px}
+
+.warn{background:var(--warn-soft);color:var(--ink);border-radius:8px;padding:10px 12px;font-size:13px}
+.warn b{color:var(--warn)}
+.note-s{font-size:12px;color:var(--muted)}
+.lab li{font-size:14px}
+
+/* grade */
+.grade{display:grid;grid-template-columns:auto repeat(3,minmax(0,1fr));gap:1px;background:var(--line);border:1px solid var(--line);border-radius:8px;overflow:hidden;font-size:12px}
+.grade > *{background:var(--surface);padding:6px 8px}
+.grade .gh{background:var(--sunk);font-weight:700;color:var(--muted);text-align:center}
+.grade .gl{background:var(--sunk);font-weight:700;color:var(--muted)}
+
+/* treat page */
+.legend{display:grid;grid-template-columns:1fr;gap:8px}
+.legend .card{gap:4px}
+.tcard{display:flex;flex-direction:column;gap:6px}
+.tcard .row2{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.tcard h3{font-size:16px}
+
+/* identify page */
+.flow{counter-reset:s;display:flex;flex-direction:column;gap:10px}
+.step{display:grid;grid-template-columns:28px 1fr;gap:10px}
+.step::before{counter-increment:s;content:counter(s);width:28px;height:28px;border-radius:50%;background:var(--ink);color:var(--bg);display:grid;place-items:center;font-family:var(--f-mono);font-size:13px}
+.step b{display:block}
+.step span{font-size:13px;color:var(--muted)}
+.ri-input{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.ri-input input[type=number]{width:7.5em;padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:var(--bg);font-family:var(--f-mono);font-size:16px}
+.ri-input input[type=range]{flex:1;min-width:160px;accent-color:var(--accent)}
+.scale{position:relative;height:auto}
+.riRows{display:flex;flex-direction:column;gap:4px}
+.riRow{display:grid;grid-template-columns:9.5em 1fr;gap:8px;align-items:center;font-size:12px;text-decoration:none;color:inherit}
+.riRow .bar{position:relative;height:14px;background:var(--sunk);border-radius:3px}
+.riRow .bar i{position:absolute;top:2px;bottom:2px;border-radius:2px;min-width:4px}
+.riRow .bar .cur{position:absolute;top:-3px;bottom:-3px;width:2px;background:var(--accent)}
+.riRow.hit{font-weight:700}
+.riRow.dim{opacity:.45}
+.riAxis{display:grid;grid-template-columns:9.5em 1fr;gap:8px;font-size:10px;color:var(--muted)}
+.riAxis div{position:relative;height:14px}
+.riAxis span{position:absolute;transform:translateX(-50%);font-family:var(--f-mono)}
+.riAxis span:first-child{transform:none}
+.riAxis span:last-child{transform:translateX(-100%)}
+
+/* quiz */
+.qcard{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:18px 16px;display:flex;flex-direction:column;gap:14px}
+.qhead{display:flex;justify-content:space-between;align-items:center;font-size:12px;color:var(--muted)}
+.qtext{font-size:18px;font-weight:700;line-height:1.55}
+.qtext .mono{font-size:17px}
+.opts{display:flex;flex-direction:column;gap:8px}
+.opt{border:1px solid var(--line);background:var(--bg);border-radius:10px;padding:12px 14px;text-align:left;cursor:pointer;font-size:15px;line-height:1.5}
+.opt.ok{background:var(--good-soft);border-color:var(--good);color:var(--ink)}
+.opt.ng{background:var(--bad-soft);border-color:var(--bad);color:var(--ink)}
+.opt:disabled{cursor:default}
+.explain{font-size:14px;background:var(--sunk);border-radius:10px;padding:10px 12px}
+.explain a{color:var(--accent);font-weight:700}
+.btn{border:0;background:var(--ink);color:var(--bg);border-radius:999px;padding:10px 18px;font-weight:700;cursor:pointer}
+.btn.ghost{background:transparent;color:var(--ink);border:1px solid var(--line)}
+.btnrow{display:flex;gap:8px;flex-wrap:wrap}
+.score{display:flex;gap:16px;font-size:13px;color:var(--muted)}
+.score b{font-family:var(--f-mono);color:var(--ink);font-weight:500}
+
+.foot{font-size:11px;color:var(--muted);padding-top:8px;line-height:1.6}
+.empty{padding:24px;text-align:center;color:var(--muted)}
+a{color:var(--accent)}
+@media (prefers-reduced-motion:no-preference){.opt,.chip,.row{transition:background-color .15s,border-color .15s}}
+</style>
+
+<header class="top">
+  <div class="wrap">
+    <div class="brand">宝石早見帖<small>GEM FIELD NOTES</small></div>
+    <div class="spacer"></div>
+    <button class="iconbtn" id="themeBtn" type="button" aria-label="表示テーマを切り替え">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="8"/><path d="M12 4a8 8 0 0 0 0 16z" fill="currentColor"/></svg>
+    </button>
+  </div>
+</header>
+
+<main class="wrap" id="app"></main>
+
+<div class="tabs">
+  <nav aria-label="メニュー">
+    <a href="#gems" data-tab="gems"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"><path d="M6 4h12l4 5-10 11L2 9z"/><path d="M2 9h20M9 4l3 16 3-16"/></svg>図鑑</a>
+    <a href="#treat" data-tab="treat"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M12 3c3 4 6 7 6 11a6 6 0 0 1-12 0c0-4 3-7 6-11z"/></svg>処理</a>
+    <a href="#check" data-tab="check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="10" cy="10" r="6"/><path d="m15 15 6 6"/></svg>鑑別</a>
+    <a href="#quiz" data-tab="quiz"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M9 9a3 3 0 1 1 3 3v2M12 17.5v.01"/></svg>クイズ</a>
+    <a href="#cert" data-tab="cert"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M6 3h9l4 4v14H6z"/><path d="M9 11h7M9 15h7M14 3v5h5"/></svg>資料</a>
+  </nav>
+</div>
+
+<script>
+/* 宝石早見表データ
+ * src: シート「★熊★」各タブ（案件トーク ポイント／宝石について①〜③／査定手順／値段まとめ／SREのデータまとめ）
+ * 補足: GIA Gem Reference Guide・GIA レポート表記、AGL（宝石鑑別団体協議会）・CGL（中央宝石研究所）の鑑別書の考え方
+ * treat.k: E=エンハンスメント / T=トリートメント / A=貼り合わせ・複合 / N=通常は無処理
+ * treat.imp: 0=価値への影響ほぼなし（業界標準） 1=やや下がる 2=大きく下がる 3=大幅減（別物扱い）
+ */
+const GEMS = [
+{
+  id:'ruby', ja:'ルビー', en:'Ruby', group:'コランダム', colors:['赤'], sw:'#B3122E', cut:'facet',
+  h:'9', ri:[1.762,1.770], riText:'1.762–1.770', bi:'0.008–0.010', sg:'4.00', optic:'複屈折（一軸性）',
+  uv:'長波：強い赤蛍光（産地で差）／短波：弱い', cf:'赤が強調される', cc:'なし',
+  key:'色は「ピジョンブラッド」が最高。非加熱かどうか、鉛ガラス充填でないかで価格が桁違いに変わる。',
+  value:[
+    '色：ピジョンブラッド（鮮やかで濃い純赤）が最高評価。紫がかりすぎ・暗すぎ・ピンク寄りは下がる',
+    '透明度：天然はインクルージョンが多いのが普通。透明感があるほど高評価',
+    '処理：非加熱（ノーヒート）は希少で高額。加熱は一般的で価値は保たれるが非加熱より下',
+    'ファセットエッジが鋭い（モース硬度9のため）。エッジの丸みは別石・ガラスを疑うサイン'
+  ],
+  check:[
+    '合成か：天然はシルク（細い針状ルチル）・フィンガープリント・直線的な色帯。合成（ベルヌイ法）は曲線状の成長線と丸い気泡',
+    '張り合わせ（ダブレット）でないか：ガードル付近の接合面・平らな気泡層・上下で光沢が違うかを見る。天然石同士の張り合わせも多い',
+    '鉛ガラス充填でないか：割れ目に青〜オレンジのフラッシュ効果、ガラス中の気泡、割れ目部分だけ光沢が弱い',
+    'UVで強い赤蛍光はミャンマー（モゴック）産の可能性。鉛ガラス品や鉄分の多い石（タイ産）は蛍光が弱い',
+    '加熱の痕跡：シルクが点状に溶けている、内包結晶のまわりに円盤状の割れ（テンションハロー）'
+  ],
+  incl:'ルチルシルク、フィンガープリント、結晶、直線的な色帯',
+  similar:'レッドスピネル、レッドベリル、レッドジルコン、ロードライトガーネット、ルベライト、ロードクロサイト、ガラス、合成ルビー',
+  treat:[
+    {n:'加熱', k:'E', imp:1, note:'色の改善と内包物を溶かして目立たなくする目的。多くのルビーに施される一般的な処理'},
+    {n:'加熱（フラックス残留あり）', k:'E', imp:1, note:'加熱時に割れ目がガラス質で癒着。残留物の量でGIAは minor〜significant と表記'},
+    {n:'鉛ガラス充填', k:'T', imp:3, note:'割れの多い低品質原石に鉛ガラスを充填。1ct1万円以下になることも。酸や修理時の熱で劣化'},
+    {n:'ベリリウム拡散', k:'T', imp:3, note:'石が本来持たない色を後から与える。天然石としての価値は大きく下がる'},
+    {n:'オイル・樹脂含浸／染色', k:'T', imp:2, note:'主にカボションや低品質品。割れ目に色が集中していないか確認'}
+  ],
+  treatNote:'同じ大きさ・色でも、トリートメント品は加熱品の1/2〜1/10以下になることがある。',
+  origin:[
+    ['ミャンマー（モゴック）','鮮やかなピジョンブラッド。強い蛍光（赤〜ピンク系）。シルクインクルージョン'],
+    ['モザンビーク','中〜強蛍光。やや紫がかった赤。透明度が高い。ミャンマー産に近い高品質も（やや暗めも）'],
+    ['タイ（チャンタブリー）','弱蛍光。黒み・茶色みがかった赤。パビリオン（腰）が浅いのも特徴'],
+    ['ベトナム','明るい赤。シルクインクルージョンが多い']
+  ],
+  price:[
+    ['ピジョンブラッド（非加熱・高品質）','100万〜500万円以上'],
+    ['加熱処理済みの高品質品','10万〜100万円'],
+    ['鉛ガラス処理品','1万円以下']
+  ],
+  idx:['@1000','@100','@30','@10'],
+  lab:[
+    'GIAのレポートは「No indications of heating（加熱の痕跡なし）」／「Indications of heating」と記載。非加熱をうたう石はこの記載か、CGLの分析報告書で確認',
+    '国内の鑑別書では加熱は一般的なエンハンスメントとして注記扱いになることが多く、鑑別書だけでは非加熱の証明にならない',
+    '鉛ガラス充填品は国内の鑑別書で処理が明記され、GIAは「Composite ruby（複合ルビー）」として扱う',
+    '「ピジョンブラッド」は色の通称。GRS・Gübelin・SSEFなどの海外ラボや国内の一部の分析報告書が独自基準で記載する。機関で基準が違うので、どこの報告書かを確認'
+  ],
+  grade:'ruby',
+  sig:['シルクインクルージョンと長波UVでの強い赤蛍光','タイ産は蛍光が弱く腰が浅い'],
+},
+{
+  id:'sapphire', ja:'サファイア', en:'Sapphire', group:'コランダム', colors:['青'], sw:'#1D3F9A', cut:'facet',
+  h:'9', ri:[1.762,1.770], riText:'1.762–1.770', bi:'0.008–0.010', sg:'4.00', optic:'複屈折（一軸性）',
+  uv:'ブルーは基本的に蛍光しない（鉄・チタンが蛍光を抑える）', cf:'変化なし', cc:'なし（カラーチェンジサファイアは別）',
+  key:'ロイヤルブルー〜コーンフラワーブルーが最高。ベリリウム拡散と表面拡散は大幅減。',
+  value:[
+    '色：ロイヤルブルー（深く鮮やかな青）、コーンフラワーブルーが最高。暗すぎ・薄すぎは下がる',
+    '透明度：インクルージョンが少なく透明度が高いほど高評価',
+    '処理：非加熱は希少で高価。加熱は一般的',
+    'ファセットエッジが鋭い（モース硬度9）'
+  ],
+  check:[
+    '合成か：天然はシルク・フィンガープリント・六角形の直線的な色帯。合成は曲線状の成長線と気泡',
+    '張り合わせでないか：天然＋合成の張り合わせも多い。ガードルの接合面と上下の色の違いを確認',
+    '表面拡散処理：液浸すると色がファセットの稜線やガードルに集中して見える',
+    '短波UVでチョークのような青白い蛍光 → 加熱の可能性',
+    '淡いスリランカ産は赤〜オレンジに蛍光することがある'
+  ],
+  incl:'ルチルシルク、フィンガープリント、直線的な色帯（六角形の成長）',
+  similar:'ブルースピネル、インディコライト、アイオライト、アウイナイト、カイヤナイト、タンザナイト、ベニトアイト、ラズライト、シリマナイト、ユークレース、デュモルティエライト、フローライト、合成サファイア、ガラス',
+  treat:[
+    {n:'加熱', k:'E', imp:1, note:'青味をより濃く均一にし、透明感を上げる。一般的な処理'},
+    {n:'ベリリウム拡散', k:'T', imp:3, note:'色を人工的に付ける。天然石としての価値は大きく下がる。判定には化学分析（LA-ICP-MS）が必要'},
+    {n:'チタン等の表面拡散', k:'T', imp:3, note:'青色が表面の薄い層だけ。再研磨で色が抜ける'},
+    {n:'ガラス充填・オイル含浸', k:'T', imp:2, note:'割れ目への充填。フラッシュ効果や気泡を確認'}
+  ],
+  treatNote:'同じ大きさ・色でも、トリートメント品は加熱品の1/2〜1/10以下になることがある。',
+  origin:[
+    ['カシミール（インド）','ベルベットのようなブルー（コーンフラワー）。シルクインクルージョン。最高評価'],
+    ['ミャンマー','ほかの色が混ざらない深い青'],
+    ['スリランカ（セイロン）','淡い青〜濃い青。透明感が強い。パビリオン（腰）が深い石が多い（原石が深い形で、色の濃さを保つために深さを残すため）。淡い色は蛍光することがある'],
+    ['マダガスカル','カシミールに似た美しいブルー。蛍光しない'],
+    ['タイ・オーストラリア','黒みがかった青。緑を帯びた青も。蛍光なし。タイ産は腰が浅い']
+  ],
+  price:[['カシミール産（非加熱・高品質）','300万〜1000万円']],
+  idx:['@500','@60','@20','@8'],
+  fluo:[
+    ['ブルー','基本的に蛍光しない','―','鉄・チタンが蛍光を抑える。加熱品やカシミール・スリランカ産は微弱な赤蛍光も'],
+    ['ライトブルー','微弱','赤〜ピンク','鉄が少なくクロムを含む場合'],
+    ['パープル','条件により','赤〜オレンジ','クロムの影響。ピンク寄りほど強い'],
+    ['ピンク','強めに出やすい','赤〜オレンジ','クロムが多いほど赤く蛍光'],
+    ['オレンジ','しにくい','―','鉄が多く蛍光を抑える'],
+    ['イエロー','ほとんどしない','―','鉄・チタンが多い'],
+    ['グリーン','なし','―','鉄が多く完全に抑制'],
+    ['無色（ホワイト）','しやすい','青白〜ピンク','クロムや不純物の影響。産地で色が異なる']
+  ],
+  lab:[
+    'GIAは加熱の有無を「Indications of heating」等で記載。非加熱の証明は分析報告書・海外ラボのレポートで確認',
+    'ベリリウム拡散は通常の鑑別書の検査では判定できないことがあり、化学分析を行う機関の報告書が安心',
+    '「ロイヤルブルー」「コーンフラワーブルー」は色の通称。報告書に記載するかどうかは機関ごとの基準'
+  ],
+  grade:'sapphire',
+  sig:['マダガスカル産はカシミールに似たブルーで蛍光しない','スリランカ産は腰（パビリオン）が深い石が多い'],
+},
+{
+  id:'padparadscha', ja:'パパラチアサファイア', en:'Padparadscha Sapphire', group:'コランダム', colors:['オレンジ','ピンク'], sw:'#F08A6C', cut:'facet',
+  h:'9', ri:[1.762,1.770], riText:'1.762–1.770', bi:'0.008–0.010', sg:'4.00', optic:'複屈折（一軸性）',
+  uv:'長波：弱いオレンジ蛍光（スリランカ産はやや強い）／短波：なし', cf:'変化なし', cc:'なし',
+  key:'ピンクとオレンジの絶妙な中間色（ロータスカラー）。ベリリウム拡散品が多く、鑑別書の確認が必須。',
+  value:[
+    '色：ピンクとオレンジのバランスが最重要。「ロータスカラー（蓮の花の色）」が最上級。片方が強すぎると下がる',
+    '透明度：高いほど価値が上がる',
+    '処理：非加熱は希少で高価'
+  ],
+  check:[
+    '鑑別書で正式に「パパラチア」と認められているか確認。類似色のサファイアが多い',
+    'ベリリウム拡散品が大量に流通した経緯あり（2000年代初め）。色が表面近くだけに分布していないか',
+    '内包物：ルチル、微細な針状インクルージョン'
+  ],
+  incl:'ルチル、微細な針状インクルージョン',
+  similar:'オレンジサファイア、ピンクサファイア、スペサルティンガーネット、インペリアルトパーズ、合成サファイア',
+  treat:[
+    {n:'加熱', k:'E', imp:1, note:'一般的。非加熱の方が評価は高い'},
+    {n:'ベリリウム拡散', k:'T', imp:3, note:'パパラチア色を人工的に作る処理。最大の注意点'}
+  ],
+  origin:[
+    ['スリランカ（セイロン）','最も価値が高い。ピンクとオレンジのバランスが良く透明感が高い'],
+    ['マダガスカル','比較的新しい産地。やや赤みが強く色が均一。スリランカ産に次ぐ評価']
+  ],
+  price:[
+    ['非加熱・スリランカ産・高品質','100万〜500万円'],
+    ['加熱処理済みの高品質品','10万〜50万円'],
+    ['色のバランスが悪いもの','5万〜20万円']
+  ],
+  idx:['@750','@150','@100','@70'],
+  lab:[
+    '「パパラチア」と呼べる色の範囲は鑑別機関ごとに基準が異なる。国内の鑑別書でもこの名称の扱いに基準がある',
+    'ベリリウム拡散の有無は分析報告書で必ず確認'
+  ],
+  sig:['ピンクとオレンジの中間色（ロータスカラー）'],
+},
+{
+  id:'emerald', ja:'エメラルド', en:'Emerald', group:'ベリル', colors:['緑'], sw:'#11845B', cut:'facet',
+  h:'7.5–8', ri:[1.565,1.602], riText:'1.565–1.602（多くは1.577–1.583）', bi:'0.005–0.009', sg:'2.72', optic:'複屈折（一軸性）',
+  uv:'天然は長波・短波ともほぼ不活性（弱い赤も）。合成は強く赤く蛍光しやすい', cf:'赤色に変化（クロム発色。鉄の多いザンビア産は変化しにくい）', cc:'なし',
+  key:'ほぼすべてにオイル含浸（エンハンスメント）。処理の程度と産地（コロンビア）で価格が大きく変わる。',
+  value:[
+    '色：濃く鮮やかな緑（青みがかった深い緑）が最高。黄色味が強いと下がる',
+    '透明度：インクルージョンが多いのが普通。クリアなほど高価',
+    '処理：オイル処理の有無と程度で価格が大きく変わる。ノーオイルは非常に希少'
+  ],
+  check:[
+    '天然は「ジャルダン（庭）」と呼ばれる内包物。コロンビア産はギザギザの三相インクルージョン',
+    '合成（フラックス法）：白や金色の綿状・葉っぱ状・ベール状の内包物。不自然に均一なクリア感',
+    '合成（水熱法）：シェブロン（山形）の成長模様、釘の頭状の内包物',
+    '枠がPt900・Pt850などしっかりしたもの以外は合成・模造を疑う（高額石は良い枠に留められる）',
+    '合成品は表面が異常に滑らかで光沢が強いことがある。UVで強く蛍光すれば合成を疑う',
+    'オイルが入った石は温めると表面にしみ出ることがある。超音波洗浄・加熱はNG'
+  ],
+  incl:'三相インクルージョン（液体＋気泡＋結晶）、ジャルダン、雲母（ザンビア産）',
+  similar:'グリーンジルコン、ツァボライト、クロムダイオプサイド、グリーンゾイサイト、アパタイト、デマントイド、グリーントルマリン、ヒデナイト、ひすい、ダイオプテーズ、フローライト、合成エメラルド、ガラス、張り合わせ石（ソーデエメラルド）',
+  treat:[
+    {n:'無色オイル含浸（シダーウッドオイル等）', k:'E', imp:0, note:'亀裂に無色透明なオイルを染み込ませて見た目を改善。ほぼすべてのエメラルドに施される。軽度ほど高評価'},
+    {n:'無色樹脂（ポリマー）含浸', k:'E', imp:1, note:'オイルより耐久性があるが、程度が重いと評価が下がる'},
+    {n:'着色オイル・着色樹脂含浸', k:'T', imp:3, note:'色のないものに色を補う。改造に近い'},
+    {n:'加熱・放射線処理', k:'T', imp:2, note:'石本来が持たない性質を後から与える処理'}
+  ],
+  origin:[
+    ['コロンビア（ムゾー、チボール、コスクエズ）','混じりけのない緑〜深い緑。市場の約7割。三相インクルージョン。最高品質'],
+    ['ザンビア','青みがかった濃い緑。透明度が比較的高い。黒雲母の内包物'],
+    ['ブラジル','黄色味のある緑。淡め。クラックが少ないが品質が高くないものが多い']
+  ],
+  price:[
+    ['コロンビア産（ノーオイル・高品質）','100万〜1000万円'],
+    ['コロンビア産（軽度オイル含浸・高品質）','50万〜300万円'],
+    ['ザンビア産・ブラジル産（軽度オイル含浸）','10万〜100万円'],
+    ['強いオイル含浸処理品','5万〜20万円']
+  ],
+  idx:['@500','@120','@40','@20'],
+  lab:[
+    'GIAは含浸の程度を「Clarity enhancement: None / Minor / Moderate / Significant」で記載。Noneは希少',
+    '国内の鑑別書では、エメラルドに一般的な無色オイル等の含浸はエンハンスメントとして注記される',
+    '着色した含浸材は処理として明記され、価値は大きく下がる'
+  ],
+  warn:['シートでは「合成と比重・屈折率は同じ」とあるが、フラックス合成は屈折率（約1.56）・比重（約2.65）がやや低い。水熱合成は天然とほぼ重なる'],
+  grade:'emerald',
+  sig:['ジャルダン（庭）と三相インクルージョン','ザンビア産は黒雲母の内包物'],
+},
+{
+  id:'aquamarine', ja:'アクアマリン', en:'Aquamarine', group:'ベリル', colors:['青'], sw:'#6EC3D6', cut:'facet',
+  h:'7.5–8', ri:[1.564,1.596], riText:'1.564–1.596', bi:'0.004–0.007', sg:'2.72', optic:'複屈折（一軸性）',
+  uv:'長波・短波ともなし', cf:'緑（黄緑）に見える', cc:'なし',
+  key:'濃い青ほど高価（サンタマリア）。加熱で緑味を抜くのは一般的で問題視されない。',
+  value:[
+    '色：濃い青で透明度が高いものに価値。緑がかると下がる',
+    '透明度：内包物が少ないものが高評価',
+    'カット：色を美しく見せるためファセットカットが多い'
+  ],
+  check:[
+    '天然は「雨」のような管状インクルージョン、液体インクルージョン、成長線',
+    'ブルートパーズとの区別：トパーズは比重3.53と重く、屈折率1.61台。手に持つと重い',
+    '合成スピネル（模造）：単屈折で屈折率1.72。チェルシーフィルターで赤く見えればコバルト着色を疑う',
+    'マシーシェ（照射した濃い青のベリル）は光で退色する'
+  ],
+  incl:'管状インクルージョン（雨）、液体インクルージョン、成長線',
+  similar:'ブルートパーズ、バライト、セレスティン、ユークレース、フローライト、パライバトルマリン、合成スピネル、ガラス',
+  treat:[
+    {n:'加熱', k:'E', imp:0, note:'緑がかった色を取り除き青くする。一般的で通常問題視されない'},
+    {n:'照射（マシーシェ）', k:'T', imp:3, note:'濃い青になるが光で退色する'}
+  ],
+  origin:[
+    ['ブラジル（サンタマリア）','濃いブルーで最高品質'],
+    ['モザンビーク','サンタマリア・アフリカーナとも呼ばれる濃い青'],
+    ['ナイジェリア・マダガスカル・パキスタン','流通量が多い']
+  ],
+  price:[],
+  idx:['@750','@10','@5','@1'],
+  lab:['加熱は一般的なエンハンスメント。鑑別書では「ベリル（アクアマリン）」として記載'],
+  sig:['加熱で緑味を抜くのが一般的な水色のベリル','チェルシーフィルターで緑（黄緑）'],
+},
+{
+  id:'morganite', ja:'モルガナイト', en:'Morganite', group:'ベリル', colors:['ピンク'], sw:'#E9A6A6', cut:'facet',
+  h:'7.5–8', ri:[1.565,1.602], riText:'1.565–1.602（多くは1.583–1.590）', bi:'0.008–0.009', sg:'2.80', optic:'複屈折（一軸性）',
+  uv:'長波：中〜強いオレンジピンク蛍光（石による）／短波：弱い〜無反応', cf:'変化しない', cc:'一部でわずかにピンク〜紫がかる',
+  key:'ピンクのベリル。加熱で黄色味を抜くのが一般的。濃いピンクほど高評価。',
+  value:['色：濃く鮮やかなピンク〜紫がかったピンクが高評価。淡すぎ・サーモン色は下がる','透明度：高いものが多いので、内包物があると目立つ'],
+  check:[
+    '天然はチューブ状・液体インクルージョン、結晶（長石や雲母）が見られることがある',
+    'コーティングしたピンクトパーズ、クンツァイト、ピンクサファイア、ガラスとの区別は屈折率で'
+  ],
+  incl:'チューブ状インクルージョン、液体インクルージョン、結晶（長石・雲母）',
+  similar:'ピンクトパーズ、クンツァイト、ピンクサファイア、ピンクトルマリン、ガラス',
+  treat:[
+    {n:'加熱', k:'E', imp:0, note:'黄色味を取り除きピンクにする。一般的'},
+    {n:'照射', k:'T', imp:1, note:'色を濃くする目的'}
+  ],
+  origin:[['マダガスカル','濃いピンクの良質品'],['ブラジル・モザンビーク・アフガニスタン','流通量が多い']],
+  price:[], idx:null,
+  lab:['加熱は一般的なエンハンスメントとして扱われる'],
+  sig:['ピンクのベリル。長波UVでオレンジピンク蛍光することがある'],
+},
+{
+  id:'redberyl', ja:'レッドベリル', en:'Red Beryl', group:'ベリル', colors:['赤'], sw:'#B0244A', cut:'facet',
+  h:'7.5–8', ri:[1.564,1.602], riText:'1.564–1.602（多くは1.567–1.580）', bi:'0.006–0.008', sg:'2.66–2.70', optic:'複屈折（一軸性）',
+  uv:'長波：弱い赤蛍光／短波：なし', cf:'赤が強調', cc:'なし',
+  key:'米国ユタ州が世界唯一の主要産地。ほとんど流通しない希少石。小粒が多く1ct超は非常に稀。',
+  value:['色：濃い赤〜紫がかった赤','サイズ：大半が0.5ct未満。1ctを超えると非常に希少','透明度：割れが多いのが普通'],
+  check:[
+    '天然はフィンガープリント状インクルージョン、気泡、液体インクルージョン',
+    '合成（水熱法、ロシア製）はシェブロン状の成長模様',
+    'UVで天然はわずかに蛍光することがあるが、合成品はより強く蛍光する'
+  ],
+  incl:'フィンガープリント、気泡、液体インクルージョン',
+  similar:'ルビー、レッドスピネル、ルベライト、ガーネット、合成レッドベリル',
+  treat:[{n:'割れ目の充填（樹脂・オイル）', k:'E', imp:1, note:'非常に一般的。程度が重いと評価が下がる'}],
+  origin:[['アメリカ（ユタ州 ワーワー山地）','世界で唯一の主要産地（商業採掘は終了）']],
+  price:[], idx:['@1000','@500','@200','@100'],
+  lab:['鑑別書では「ベリル」と記載され、含浸の有無が注記される'],
+  sig:['米国ユタ州ワーワー山地だけで採れる赤いベリル'],
+},
+{
+  id:'alexandrite', ja:'アレキサンドライト', en:'Alexandrite', group:'クリソベリル', colors:['緑','紫'], sw:'#2E7F74', sw2:'#8E2F5A', cut:'facet',
+  h:'8.5', ri:[1.746,1.755], riText:'1.746–1.755', bi:'0.008–0.010', sg:'3.73', optic:'複屈折（二軸性）',
+  uv:'長波・短波ともなし（弱い赤も）。合成は異常に強く蛍光することがある', cf:'赤が強調', cc:'昼光：青緑〜緑 → 白熱灯：赤紫〜赤',
+  key:'昼と夜で色が変わる希少石。変色の強さと鮮明さが価格を決める。古いジュエリーは合成コランダムの変色石に注意。',
+  value:['カラーチェンジ：昼は緑、夜は赤にはっきり変わるほど高価。変化の割合と色の鮮やかさ','透明度：多少のインクルージョンは許容','処理：ほとんどが無処理。処理品は評価が下がる'],
+  check:[
+    '最も多い模造：変色する合成コランダム（バナジウム着色）。屈折率1.762〜で区別でき、曲線状の成長線が見える',
+    '合成アレキサンドライト（引き上げ法・フラックス法）は非常にクリーン、または白金の板状内包物',
+    '変色スピネル・変色ガーネットも似る。屈折率と偏光器で確認',
+    '二色鏡（ダイクロスコープ）で三色の多色性を確認'
+  ],
+  incl:'ルチル、結晶片、指紋状インクルージョン',
+  similar:'カラーチェンジサファイア、変色する合成コランダム、マラヤガーネット、アンダリュサイト、ズルタナイト（ダイアスポア）、変色スピネル',
+  treat:[{n:'無処理が基本', k:'N', imp:0, note:'まれに割れ目へのオイル含浸がある'}],
+  origin:[
+    ['ロシア（ウラル）','最高品質。強いカラーチェンジと透明度の高さ'],
+    ['ブラジル','ロシア産に次ぐ評価。やや黄色味のある緑で、変色はやや穏やか'],
+    ['スリランカ','青緑から紫への変色。色変化が弱めで評価は低め。透明感は高い']
+  ],
+  price:[['スリランカ産（弱いカラーチェンジ）','10万〜100万円']],
+  idx:['@1120','@800','@200','@50'],
+  lab:['GIA・国内の鑑別書ともに、変色の程度や産地は通常の鑑別書の範囲外。産地は分析報告書で確認','「アレキサンドライト」の名称は、はっきりした変色があるクリソベリルに限られる'],
+  sig:['昼光で青緑、白熱灯で赤紫に変わるクリソベリル'],
+},
+{
+  id:'cateye', ja:'クリソベリルキャッツアイ', en:"Chrysoberyl Cat's Eye", group:'クリソベリル', colors:['黄','緑','茶'], sw:'#B8A13A', cut:'cab',
+  h:'8.5', ri:[1.746,1.755], riText:'1.746–1.755', bi:'0.008–0.010', sg:'3.73', optic:'複屈折（二軸性）',
+  uv:'長波・短波ともなし', cf:'変化なし', cc:'なし',
+  key:'「キャッツアイ」とだけ呼べるのはクリソベリル。光の帯（シャトヤンシー）が鋭く中央にあるほど高評価。',
+  value:['シャトヤンシー：細く鋭い光の帯が中央を通るもの','色：ハニーイエロー〜黄緑','ミルク＆ハニー：横から光を当てると半分が明るく半分が蜂蜜色に見える効果が強いもの'],
+  check:[
+    '石英キャッツアイ：屈折率1.54・比重2.65と低い',
+    'ガラス製（ファイバーオプティック）：横から見ると蜂の巣（ハニカム）状の構造',
+    'トルマリン・アパタイトのキャッツアイも似る。屈折率で区別'
+  ],
+  incl:'平行に並んだ繊維状インクルージョン（シルク）',
+  similar:'石英キャッツアイ、トルマリンキャッツアイ、アパタイトキャッツアイ、ガラス',
+  treat:[{n:'無処理が基本', k:'N', imp:0, note:'まれに色を濃くする照射'}],
+  origin:[['スリランカ','最高品質のものが多い'],['ブラジル','やや暗めのものが多い'],['インド・タンザニア','流通あり']],
+  price:[['スリランカ産（はっきりしたキャッツアイ・高品質）','50万〜300万円']],
+  idx:['@200','@10','@5','@3'],
+  lab:['国内の鑑別書では「クリソベリル・キャッツアイ」と記載。ほかの鉱物のキャッツアイは「石英キャッツアイ」のように鉱物名を付ける'],
+  sig:['ミルク＆ハニー効果のあるシャトヤンシー'],
+},
+{
+  id:'imperialtopaz', ja:'インペリアルトパーズ', en:'Imperial Topaz', group:'トパーズ', colors:['オレンジ','茶'], sw:'#D9822B', cut:'facet',
+  h:'8', ri:[1.609,1.643], riText:'1.609–1.643（インペリアルは1.629–1.637付近）', bi:'0.008–0.010', sg:'3.53', optic:'複屈折（二軸性）',
+  uv:'長波：弱〜中程度の黄〜オレンジ蛍光（無反応も多い）／短波：反応なし〜非常に弱い', cf:'基本的に変化しない', cc:'なし',
+  key:'赤みのある黄金色（シェリーカラー）。赤みが強いほど希少。へき開が完全で割れやすい。',
+  value:['色：オレンジ〜ピンクを帯びた黄金色が最高。赤みが強いほど希少','透明度：インクルージョンが少ないものが高評価'],
+  check:[
+    '天然は二相・三相インクルージョン（液体＋気泡＋固体）、指紋状、針状結晶',
+    'へき開に沿った亀裂がないか（ぶつけると割れる）',
+    'シトリン（屈折率1.54）、イエローサファイア（1.76）とは屈折率で区別',
+    '一部の合成・模造品は不自然に強く蛍光する'
+  ],
+  incl:'二相・三相インクルージョン、指紋状、針状結晶（ルチル等）',
+  similar:'イエローサファイア、ゴールデンベリル、シトリン、ダンビュライト、ゴールデンジルコン、クリソベリル',
+  treat:[{n:'加熱（ピンキング）', k:'E', imp:0, note:'オレンジ系をピンクにする。安定'},{n:'コーティング', k:'T', imp:3, note:'表面に色を付けたもの。擦れて色が剥げる'}],
+  origin:[['ブラジル（オーロ・プレット）','代表的な産地'],['パキスタン','ピンクのトパーズを産出']],
+  price:[], idx:['@200','@5','@3','@1'],
+  lab:['鑑別書では「トパーズ」と記載。「インペリアル」は色の通称'],
+  sig:['シェリーカラー（赤みのある琥珀色）'],
+},
+{
+  id:'pinktopaz', ja:'ピンクトパーズ', en:'Pink Topaz', group:'トパーズ', colors:['ピンク'], sw:'#E07BA0', cut:'facet',
+  h:'8', ri:[1.609,1.643], riText:'1.609–1.643', bi:'0.008–0.010', sg:'3.53', optic:'複屈折（二軸性）',
+  uv:'長波：薄いピンク〜オレンジ系の蛍光（個体差あり）／短波：ほとんど反応なし', cf:'―', cc:'明確なカラーチェンジはない',
+  key:'天然のピンクは希少。多くは加熱したインペリアル。安価なものはコーティング品が多い。',
+  value:['色：鮮やかなピンク','処理：天然色・加熱は評価が保たれ、コーティングは大幅減'],
+  check:['コーティング品はファセットの稜線で色が剥げている','天然は液体インクルージョン（一相・二相）、針状、指紋状'],
+  incl:'液体インクルージョン、針状インクルージョン、指紋状、結晶',
+  similar:'ピンクダイヤモンド、ピンクトルマリン、フローライト、ピンクスピネル、クンツァイト、カルサイト',
+  treat:[{n:'加熱', k:'E', imp:0, note:'インペリアルを加熱してピンクに'},{n:'コーティング', k:'T', imp:3, note:'無色トパーズの表面に色を付けたもの'}],
+  origin:[['パキスタン（カトラン）','天然ピンクの産地'],['ブラジル','加熱用のインペリアルトパーズ']],
+  price:[], idx:null,
+  lab:['コーティングは処理として明記される'],
+  sig:['天然は希少で、安価品はコーティングが多いトパーズ'],
+},
+{
+  id:'paraiba', ja:'パライバトルマリン', en:'Paraíba Tourmaline', group:'トルマリン', colors:['青','緑'], sw:'#18C3C9', cut:'facet',
+  h:'7–7.5', ri:[1.624,1.644], riText:'1.624–1.644', bi:'0.018–0.020', sg:'3.06', optic:'複屈折（一軸性）',
+  uv:'一般に不活性（銅が蛍光を抑える）', cf:'変化なし', cc:'なし',
+  key:'銅（Cu）とマンガンによるネオンブルー。ブラジル・パライバ州産が最高。加熱は一般的。',
+  value:['色：ネオンブルー〜ネオングリーンブルーの発色が強いものが最高評価','産地：ブラジル産はアフリカ産より高い','透明度：内包物は多めでも色が強ければ評価される'],
+  check:[
+    '銅を含むかどうかが名称の条件。分光・化学分析で銅とマンガンを確認',
+    'アパタイト（屈折率が近い1.63台だが複屈折が小さく硬度5）、ガラス、ブルートパーズに注意',
+    '天然は銅を含む内包物、微細な液体インクルージョン、割れ目'
+  ],
+  incl:'銅を含む内包物、微細な液体インクルージョン、チューブ状',
+  similar:'アパタイト、ブルートパーズ、アクアマリン、ガラス、合成スピネル',
+  treat:[{n:'加熱', k:'E', imp:0, note:'紫味を抜いてネオンカラーにする。一般的'},{n:'割れ目の樹脂充填', k:'E', imp:1, note:'一般的。程度が重いと下がる'}],
+  origin:[['ブラジル（パライバ州・リオグランデ・ド・ノルテ州）','最高品質。色が鮮やかで最も価値が高い'],['ナイジェリア','ブラジル産に近い色'],['モザンビーク','大粒でクリーンなものが多いが、色はやや穏やか']],
+  price:[['色が薄いもの・処理品','10万〜50万円']],
+  idx:['@550','@500','@200','@50'],
+  lab:['国際的な取り決め（LMHC）で、銅とマンガンを含む青〜緑のトルマリンは産地に関係なく「パライバトルマリン」と呼べる','産地（ブラジル／アフリカ）は分析報告書で確認。価格差が大きい'],
+  warn:['シート③では「長波：強青色蛍光」、シート①では「天然はわずかに蛍光」とあるが、GIA等の資料では銅を含むトルマリンは一般に蛍光しない（不活性）とされる'],
+  sig:['銅とマンガンを含むネオンブルーのトルマリン'],
+},
+{
+  id:'rubellite', ja:'ルベライト（赤トルマリン）', en:'Rubellite', group:'トルマリン', colors:['赤','ピンク'], sw:'#B11E55', cut:'facet',
+  h:'7–7.5', ri:[1.624,1.644], riText:'1.624–1.644', bi:'0.018–0.020', sg:'3.06', optic:'複屈折（一軸性）',
+  uv:'長波：赤蛍光と記載（一般には弱い〜不活性）', cf:'赤が強調', cc:'なし',
+  key:'深い赤〜ワインレッドのトルマリン。白熱灯でも色が茶色くならないものをルベライトと呼ぶ。',
+  value:['色：深い赤〜ワインレッドが最高。ピンクに近いものはピンクトルマリン扱い','透明度：内包物が多いのが普通。色が鮮やかなら価値は高い'],
+  check:['天然はチューブ状・液体インクルージョン、ガスを含む割れ（トリカイト）','ルビー（1.76）、スピネル（単屈折1.72）、ガーネット（単屈折）とは屈折率と偏光で区別','複屈折が大きく、裏側のファセットが二重に見えることがある'],
+  incl:'チューブ状インクルージョン、液体インクルージョン、ガスを含む割れ',
+  similar:'ルビー、レッドスピネル、ガーネット、レッドベリル',
+  treat:[{n:'照射', k:'T', imp:1, note:'色を濃くする。検出が難しい'},{n:'加熱', k:'E', imp:0, note:'まれ'},{n:'割れ目の充填', k:'E', imp:1, note:'程度で評価が変わる'}],
+  origin:[['ブラジル・ナイジェリア・モザンビーク・マダガスカル','主な産地']],
+  price:[], idx:['@100','@15','@7','@3'],
+  lab:['鑑別書では「トルマリン」と記載。ルベライトは色の通称'],
+  sig:['白熱灯でも茶色くならない赤いトルマリン'],
+},
+{
+  id:'pinktourmaline', ja:'ピンクトルマリン', en:'Pink Tourmaline', group:'トルマリン', colors:['ピンク'], sw:'#E46C9C', cut:'facet',
+  h:'7–7.5', ri:[1.624,1.644], riText:'1.624–1.644', bi:'0.018–0.020', sg:'3.06', optic:'複屈折（一軸性）',
+  uv:'弱い〜不活性', cf:'―', cc:'なし',
+  key:'鮮やかなピンクが人気。淡すぎると下がる。加熱・照射は通常大きく影響しない。',
+  value:['色：鮮やかなピンク。淡すぎるピンクは下がる','透明度：内包物が少なく透明度が高いもの','カット：オーバル、クッションが多い'],
+  check:['天然は細い針状インクルージョン','偏光器・二色鏡で強い多色性を確認','人工処理品は不自然な蛍光を示すことがある'],
+  incl:'針状インクルージョン、液体インクルージョン',
+  similar:'ピンクサファイア、ピンクスピネル、モルガナイト、クンツァイト、ピンクトパーズ',
+  treat:[{n:'加熱・照射', k:'E', imp:0, note:'されることがあるが、通常は評価に大きく影響しない'}],
+  origin:[['ブラジル・ナイジェリア・モザンビーク・アフガニスタン','主な産地']],
+  price:[], idx:['@750','@5','@3','@1'],
+  lab:['鑑別書では「トルマリン」と記載'],
+  sig:['強い多色性を示すピンクの石'],
+},
+{
+  id:'indicolite', ja:'インディコライト（青トルマリン）', en:'Indicolite', group:'トルマリン', colors:['青'], sw:'#1F5F86', cut:'facet',
+  h:'7–7.5', ri:[1.624,1.644], riText:'1.624–1.644', bi:'0.018–0.020', sg:'3.06', optic:'複屈折（一軸性）',
+  uv:'長波・短波ともなし', cf:'変化なし', cc:'なし',
+  key:'深い青のトルマリン。緑がかると下がる。結晶の縦方向から見ると色が濃く暗く見える。',
+  value:['色：深い青。グリーンがかると下がる','透明度：内包物が少ないものが高評価','カット：ペアシェイプ、オーバルが多い'],
+  check:['天然は細かい針状・チューブ状インクルージョン','偏光器・二色鏡で強い多色性（角度で色が変わる）','合成品は不自然な蛍光を示すことがある'],
+  incl:'チューブ状インクルージョン、針状インクルージョン',
+  similar:'サファイア、アクアマリン、ブルートパーズ、パライバトルマリン',
+  treat:[{n:'加熱', k:'E', imp:1, note:'暗い色を明るくする。無処理の方が高評価'}],
+  origin:[['ブラジル・ナミビア・アフガニスタン・ナイジェリア','主な産地']],
+  price:[['低品質（緑がかっている・内包物多め）','2万〜5万円']],
+  idx:['@350','@10','@5','@3'],
+  lab:['鑑別書では「トルマリン」と記載'],
+  sig:['縦方向から見ると暗く見える青いトルマリン'],
+},
+{
+  id:'greentourmaline', ja:'グリーントルマリン', en:'Green Tourmaline', group:'トルマリン', colors:['緑'], sw:'#3D7A3A', cut:'facet',
+  h:'7–7.5', ri:[1.614,1.666], riText:'1.614–1.666', bi:'0.018–0.020', sg:'3.06', optic:'複屈折（一軸性）',
+  uv:'長波：なし〜ごく弱い緑／短波：ほぼなし', cf:'ほぼ変化なし', cc:'なし',
+  key:'濃いグリーンが好まれる。複屈折が大きく、多色性が強い。',
+  value:['色：濃いグリーン。黄色味・暗すぎは下がる','透明度：高いほど価値が上がる'],
+  check:['天然はチューブ状・フェザー状の液体インクルージョン、針状結晶','エメラルド（1.57台）とは屈折率で区別','ナイジェリア産はやや黄色味'],
+  incl:'液体インクルージョン（チューブ状・フェザー状）、針状インクルージョン、層状構造',
+  similar:'エメラルド、ペリドット、ツァボライト、クロムダイオプサイド',
+  treat:[{n:'加熱', k:'E', imp:0, note:'暗い色を明るくする'},{n:'割れ目の充填', k:'E', imp:1, note:'程度で評価が変わる'}],
+  origin:[['ブラジル','高品質のものが多い'],['ナイジェリア','やや黄色味を帯びた緑'],['マダガスカル','濃いグリーンのもの']],
+  price:[], idx:['@900','@3','@2','@1'],
+  lab:['クロムやバナジウムで発色した濃い緑は「クロムトルマリン」と呼ばれることがある'],
+  sig:['複屈折が大きく多色性が強い緑の石'],
+},
+{
+  id:'spessartine', ja:'スペサルティンガーネット', en:'Spessartine Garnet', group:'ガーネット', colors:['オレンジ'], sw:'#E2621B', cut:'facet',
+  h:'7–7.5', ri:[1.790,1.820], riText:'1.790–1.820', bi:'なし', sg:'4.15', optic:'単屈折',
+  uv:'長波・短波ともなし', cf:'変化なし', cc:'なし',
+  key:'鮮やかなオレンジのガーネット。茶色みが強いと下がる。通常は無処理。',
+  value:['色：鮮やかなオレンジ〜赤橙色が最高。茶色が強いと下がる','透明度：高いほど評価が上がるが、色が良ければ内包物があっても価値はある'],
+  check:['単屈折。屈折率は1.79〜1.82で屈折計の上限近く','天然は波打つようなレース状の液体インクルージョン、ジルコンの内包物','オレンジサファイア（複屈折1.76）と区別'],
+  incl:'ジルコン内包物、レース状の液体インクルージョン',
+  similar:'ヘソナイト、オレンジサファイア、ファイヤーオパール、インペリアルトパーズ',
+  treat:[{n:'無処理が基本', k:'N', imp:0, note:''}],
+  origin:[['ナミビア・ナイジェリア','鮮やかなオレンジ（マンダリンガーネット）'],['タンザニア','やや赤みが強いもの']],
+  price:[['最高品質（鮮やかなオレンジ・透明度高い）','5万〜30万円'],['標準品質（やや赤みが強い・透明度中程度）','2万〜5万円'],['低品質（茶色がかっている・内包物多め）','5千〜2万円']],
+  idx:['@100','@5','@3','@1'],
+  lab:['鑑別書では「ガーネット（スペサルティン）」のように種名が併記されることが多い'],
+  sig:['マンダリンオレンジの単屈折の石'],
+},
+{
+  id:'demantoid', ja:'デマントイドガーネット', en:'Demantoid Garnet', group:'ガーネット', colors:['緑'], sw:'#4E9A2E', cut:'facet',
+  h:'6.5–7', ri:[1.880,1.890], riText:'1.880–1.890（屈折計の範囲外）', bi:'なし', sg:'3.84', optic:'単屈折',
+  uv:'長波：弱い黄緑蛍光（一般には不活性）', cf:'変化なし', cc:'なし',
+  key:'ダイヤモンドより強いファイア。ロシア産の「ホーステイル（馬の尻尾）」内包物は産地の目印で、むしろ評価が上がる。',
+  value:['色：鮮やかな黄緑〜エメラルドグリーンが最高','ファイア：分散度0.057でダイヤモンド（0.044）より強い虹色','ホーステイル：ロシア産の証で評価が上がる'],
+  check:['屈折率が1.81を超えるので通常の屈折計では「範囲外（OTL）」','ホーステイル（クリソタイルの繊維が放射状に広がる）が見えればロシア産の可能性','硬度が低めでエッジが摩耗しやすい'],
+  incl:'ホーステイル（放射状の繊維）',
+  similar:'ツァボライト、グリーンジルコン、ペリドット、エメラルド、グリーントルマリン',
+  treat:[{n:'加熱', k:'E', imp:0, note:'ロシア産でまれに色の改善'}],
+  origin:[['ロシア（ウラル）','鮮やかなグリーン、ホーステイルあり。最高評価'],['ナミビア・マダガスカル','やや黄色味が強い。透明度が高いもの']],
+  price:[['ロシア産（鮮やかなグリーン・ホーステイルあり）','50万〜300万円'],['ナミビア・マダガスカル産（黄緑・透明度高い）','10万〜50万円'],['低品質（黄色みが強い・内包物多め）','5万〜10万円']],
+  idx:['@100','@15','@7','@3'],
+  lab:['鑑別書では「ガーネット（デマントイド）」。産地は分析報告書で確認'],
+  sig:['ホーステイルインクルージョン（ロシア産の目印）'],
+},
+{
+  id:'grossular', ja:'グロッシュラーガーネット（ツァボライト／ヘソナイト）', en:'Grossular Garnet', group:'ガーネット', colors:['緑','オレンジ'], sw:'#2F9E4F', cut:'facet',
+  h:'7–7.5', ri:[1.730,1.760], riText:'1.740前後（1.730–1.760）', bi:'なし', sg:'3.61', optic:'単屈折',
+  uv:'ツァボライト：長波で弱〜中程度のオレンジ〜黄緑蛍光／短波：反応なし', cf:'ツァボライトは赤く見えることがある', cc:'しない',
+  key:'緑のツァボライトが人気（ほぼ無処理）。オレンジのヘソナイトは「糖蜜状（もやもや）」の内包物が特徴。',
+  value:['ツァボライト：鮮やかなグリーンで透明度が高いほど評価が上がる','ヘソナイト：濃いオレンジで透明度の高いものは希少','カット：色を活かすブリリアントカット、クッションカットが多い'],
+  check:['ツァボライトは針状結晶、アパタイトなどの結晶、ネガティブクリスタル','ヘソナイトは糖蜜を混ぜたような渦巻き状の内包物と丸い結晶','単屈折。グリーンジルコン・グリーントルマリン・ペリドットは複屈折'],
+  incl:'ツァボライト：針状結晶、結晶インクルージョン、ネガティブクリスタル／ヘソナイト：渦巻き状（糖蜜状）',
+  similar:'グリーンジルコン、デマントイド、グリーントルマリン、ペリドット、エメラルド',
+  treat:[{n:'無処理が基本', k:'N', imp:0, note:''}],
+  origin:[['ケニア・タンザニア','ツァボライト'],['スリランカ','ヘソナイト']],
+  price:[['ツァボライト（最高品質・鮮やかなグリーン）','10万〜100万円'],['ヘソナイト（濃いオレンジ・透明度高い）','5千〜5万円'],['低品質（色が薄い・内包物多め）','3千〜2万円']],
+  idx:['@75','@5','@3','@1'],
+  lab:['鑑別書では「ガーネット（グロッシュラー）」。ツァボライトは通称'],
+  sig:['ヘソナイトの糖蜜状インクルージョン'],
+},
+{
+  id:'peridot', ja:'ペリドット', en:'Peridot', group:'オリビン', colors:['緑'], sw:'#8DB33A', cut:'facet',
+  h:'6.5–7', ri:[1.654,1.690], riText:'1.654–1.690', bi:'0.035–0.038', sg:'3.34', optic:'複屈折（二軸性）',
+  uv:'長波・短波ともなし', cf:'変化なし', cc:'なし',
+  key:'オリーブグリーン〜黄緑。複屈折が大きく、裏のファセットが二重に見える。「リリーパッド」内包物が特徴。',
+  value:['色：濃く鮮やかなグリーン（オリーブグリーン〜黄緑）が最高。黄色味・茶色っぽいものは下がる','透明度：内包物が少ないほど高評価。リリーパッドも特徴的'],
+  check:['リリーパッド（蓮の葉状の模様）は天然の目印','ルーペでパビリオン側のファセットが二重に見える（大きな複屈折）','ガラス（単屈折）やグリーントルマリンと区別'],
+  incl:'リリーパッド（蓮の葉状の割れ）、黒い結晶',
+  similar:'グリーントルマリン、クリソベリル、モルダバイト、ガラス',
+  treat:[{n:'無処理が基本', k:'N', imp:0, note:'まれに割れ目の充填'}],
+  origin:[['ミャンマー','深いグリーンで透明度の高い最高品質'],['パキスタン','大粒で鮮やか'],['アメリカ（アリゾナ）・中国','小粒が多い']],
+  price:[['最高品質（ミャンマー・深いグリーン・透明度高い）','5万〜30万円'],['標準品質（やや黄色味がある）','1万〜5万円'],['低品質（色が薄い・茶色が混じる）','3千〜1万円']],
+  idx:['@50','@10','@3','@1'],
+  lab:['鑑別書では「ペリドット」'],
+  sig:['リリーパッドインクルージョンと二重に見える裏面'],
+},
+{
+  id:'jadeite', ja:'ヒスイ（ジェダイト）', en:'Jadeite', group:'ヒスイ', colors:['緑'], sw:'#2E8B57', cut:'cab',
+  h:'6.5–7', ri:[1.66,1.66], riText:'1.66前後（スポット法）', bi:'集合体', sg:'3.34', optic:'集合体',
+  uv:'天然は通常不活性。長波で緑〜青白い蛍光は処理品（樹脂含浸）を疑う', cf:'変化なし', cc:'なし',
+  key:'A貨（未処理）・B貨（漂白＋樹脂含浸）・C貨（染色）で価値がまったく違う。インペリアルジェイドが最高。',
+  value:['色：インペリアルジェイド（濃く鮮やかな緑）が最高。淡い緑・白っぽい・灰色がかったものは低い','透明感：半透明で照りがあるほど高い','質感：きめが細かく色が均一'],
+  check:[
+    'B貨：表面にクモの巣状の細かい溝、UVで青白い蛍光、叩くと鈍い音',
+    'C貨：色が割れ目や粒の間に集中。分光器で染料の吸収',
+    'ネフライト（屈折率1.61・比重2.95）、蛇紋石、アベンチュリン、クリソプレーズ、染色石英（マレーシアジェイド）、ガラスとの区別'
+  ],
+  incl:'針状鉱物、粒状（グラニュラー）構造',
+  similar:'ネフライト、蛇紋石、アベンチュリンクォーツ、クリソプレーズ、ハイドログロッシュラー、染色石英、ガラス',
+  treat:[
+    {n:'表面のワックス処理', k:'E', imp:0, note:'A貨でも一般的。A貨として扱われる'},
+    {n:'B貨（漂白＋樹脂含浸）', k:'T', imp:3, note:'酸で不純物を抜き樹脂で固めたもの。耐久性も落ちる'},
+    {n:'C貨（染色）', k:'T', imp:3, note:'色を付けたもの。さらに評価が低い'},
+    {n:'B＋C貨', k:'T', imp:3, note:'漂白・樹脂含浸・染色の組み合わせ'}
+  ],
+  origin:[['ミャンマー（カチン州）','宝石質ヒスイの主産地'],['中国','商業用ジェダイトが多い（加工・流通）'],['日本（新潟県糸魚川）','国石。宝飾用の流通は少ない'],['グアテマラ・ロシア','産出あり']],
+  price:[['インペリアルジェイド（最高品質・深緑・半透明）','100万〜1000万円以上'],['標準品質（やや淡い緑・透明感あり）','10万〜100万円'],['B貨・C貨（処理品）','数千円〜10万円']],
+  idx:['@750','@20','@5','@1'],
+  lab:['国内の鑑別書では樹脂含浸・染色が明記される。「ジェダイト」の記載だけでなくコメント欄を必ず確認','B貨の判定には赤外分光（FTIR）などの機器分析が必要'],
+  warn:['ヒスイは集合体のため、屈折計では1.66付近の値がぼんやり出る（スポット法）'],
+  sig:['A貨・B貨・C貨で区別される宝石'],
+},
+{
+  id:'lavenderjade', ja:'ラベンダーヒスイ', en:'Lavender Jadeite', group:'ヒスイ', colors:['紫'], sw:'#A88BC7', cut:'cab',
+  h:'6.5–7', ri:[1.66,1.66], riText:'1.66前後', bi:'集合体', sg:'3.33', optic:'集合体',
+  uv:'長波・短波ともなし（処理品は蛍光することがある）', cf:'変化なし', cc:'なし',
+  key:'鮮やかなラベンダーパープルが最高。緑のヒスイより希少。染色品（C貨）に注意。',
+  value:['色：鮮やかなラベンダーパープルが最高。灰色がかったものは下がる','透明感：半透明で均一なもの'],
+  check:['染色品は色が粒の境目や割れに集中','長石との共生が見られることがある'],
+  incl:'長石（フェルドスパー）との共生',
+  similar:'染色石英、ラベンダーアメジスト、チャロアイト',
+  treat:[{n:'B貨・C貨', k:'T', imp:3, note:'漂白・樹脂含浸・染色'}],
+  origin:[['ミャンマー','主産地']],
+  price:[['最高品質（鮮やかなラベンダー色）','50万〜500万円'],['標準品質（やや淡いラベンダー）','10万〜50万円'],['B貨・C貨（処理品）','数千円〜10万円']],
+  idx:['@200','@5','@1',''],
+  lab:['処理の有無は鑑別書のコメント欄で確認'],
+  sig:['緑のヒスイより希少な淡紫のジェダイト'],
+},
+{
+  id:'tanzanite', ja:'タンザナイト', en:'Tanzanite', group:'ゾイサイト', colors:['青','紫'], sw:'#4B3FA8', cut:'facet',
+  h:'6–7', ri:[1.691,1.700], riText:'1.691–1.700', bi:'0.008–0.013', sg:'3.35', optic:'複屈折（二軸性）',
+  uv:'長波：弱い青蛍光（一般には不活性）／短波：なし', cf:'変化なし', cc:'なし',
+  key:'タンザニアの1鉱山のみ。濃いブルーバイオレットほど高評価。ほぼすべて加熱（問題視されない）。',
+  value:['色：濃いブルーバイオレット（青紫）が最高。青みが強いほど高評価。紫が強い・薄いものは下がる','サイズ：3ct以上の濃い色が高価','透明度：インクルージョンが少ないもの'],
+  check:['偏光器・二色鏡で強い三色性（青・紫・赤〜茶）','合成フォルステライト（模造）：複屈折が非常に大きく、裏面が二重に見える','コバルトコーティング品：表面の擦れ・色むら','硬度が低くへき開があるので、エッジの欠けに注意'],
+  incl:'液体インクルージョン、微細な針状結晶',
+  similar:'サファイア、アイオライト、合成フォルステライト、合成コランダム、ガラス、YAG',
+  treat:[{n:'加熱', k:'E', imp:0, note:'茶色を抜いて青紫にする。ほぼすべてに施され、検出もできない'},{n:'コーティング', k:'T', imp:3, note:'コバルト等の膜で色を付けたもの'}],
+  origin:[['タンザニア（メレラニ）','世界で唯一の産地']],
+  price:[['最高品質（濃いブルーバイオレット・3ct以上）','10万〜50万円'],['標準品質（やや淡いブルーバイオレット）','3万〜10万円'],['低品質（色が薄い・透明度低い）','5千〜3万円']],
+  idx:['@55','@15','@8','@3'],
+  lab:['鑑別書では「ゾイサイト（タンザナイト）」と記載されることが多い'],
+  sig:['青・紫・赤の三色性を示すゾイサイト'],
+},
+{
+  id:'blackopal', ja:'ブラックオパール', en:'Black Opal', group:'オパール', colors:['遊色'], sw:'#1B2235', cut:'opal',
+  h:'5.5–6.5', ri:[1.37,1.47], riText:'1.45前後（1.37–1.47）', bi:'なし', sg:'2.15', optic:'単屈折（非晶質）',
+  uv:'長波・短波ともなし（白〜青白く光るものもある）', cf:'変化なし', cc:'なし',
+  key:'黒い地色に強い遊色。赤の遊色が最も希少で高価。張り合わせ（ダブレット・トリプレット）に注意。',
+  value:['遊色：赤・緑・青・オレンジの遊色が強く、赤が多いほど高価','地色：暗い（ボディトーンN1〜N4）ほどブラックオパール','パターン：ハーレクイン（モザイク状）が最高'],
+  check:[
+    '張り合わせ：側面で層の境目（黒い接着層）を確認。トリプレットは上に透明なドームがある',
+    '合成（ギルソン）：遊色が鱗状・トカゲの皮のような柱状パターン',
+    'スモーク・シュガー処理：黒い地色が人工的。拡大すると黒い粒',
+    'クレージング（乾燥によるひび）、急な温度変化・乾燥に弱い'
+  ],
+  incl:'遊色効果（プレイオブカラー）、球状構造',
+  similar:'ボルダーオパール、合成オパール、ダブレット・トリプレット、ガラス、樹脂',
+  treat:[{n:'スモーク・シュガー処理', k:'T', imp:3, note:'地色を人工的に黒くする'},{n:'樹脂含浸', k:'T', imp:2, note:'安定化・遊色の強調'},{n:'張り合わせ（ダブレット・トリプレット）', k:'A', imp:3, note:'薄いオパールを黒い台に貼る。オパール単体の石とは別物'}],
+  origin:[['オーストラリア（ライトニングリッジ）','ブラックオパールの代表産地']],
+  price:[['最高品質（強いレッド遊色・5ct以上）','100万〜500万円'],['標準品質（ブルー・グリーンの遊色）','10万〜100万円'],['低品質（遊色が少ない・地色が薄い）','3万〜10万円']],
+  idx:['@200','@50','@15','@5'],
+  lab:['張り合わせ石は鑑別書で「貼り合わせ石」と明記される'],
+  sig:['黒い地色に強い遊色、赤の遊色が最高'],
+},
+{
+  id:'fireopal', ja:'ファイヤーオパール', en:'Fire Opal', group:'オパール', colors:['オレンジ','赤'], sw:'#EE5A24', cut:'cab',
+  h:'5.5–6.5', ri:[1.37,1.47], riText:'1.45前後（1.37–1.47）', bi:'なし', sg:'2.00', optic:'単屈折（非晶質）',
+  uv:'長波・短波ともなし', cf:'変化なし', cc:'なし',
+  key:'鮮やかなオレンジ〜赤のオパール。遊色がなくても良い。透明度が高いほど高評価。',
+  value:['色：鮮やかなオレンジ〜赤が最高。黄色・茶色がかると下がる','透明度：高いほど評価が高い','カット：ファセットカットやカボション'],
+  check:['気泡が見えればガラスを疑う（天然にも気泡状の内包物はある）','クラック（割れ）、クレージングの有無','単屈折・低い屈折率（1.45前後）'],
+  incl:'気泡状の内包物、クラック',
+  similar:'スペサルティンガーネット、カーネリアン、ガラス、合成オパール',
+  treat:[{n:'無処理が基本', k:'N', imp:0, note:'エチオピア産の一部に着色・スモーク処理'}],
+  origin:[['メキシコ（ケレタロ）','代表産地'],['エチオピア・ブラジル','産出あり']],
+  price:[['最高品質（濃いオレンジレッド・透明度高い）','10万〜50万円'],['標準品質（オレンジ・やや透明感あり）','1万〜10万円'],['低品質（黄色・透明度低い）','3千〜1万円']],
+  idx:['@100','@10','@3','@1'],
+  lab:['鑑別書では「オパール」と記載'],
+  sig:['遊色がなくても評価されるオレンジのオパール'],
+},
+{
+  id:'wateropal', ja:'ウォーターオパール', en:'Water Opal', group:'オパール', colors:['無色','遊色'], sw:'#BFD7E3', cut:'opal',
+  h:'5.5–6.5', ri:[1.37,1.47], riText:'1.45前後', bi:'なし', sg:'2.00', optic:'単屈折（非晶質）',
+  uv:'長波・短波ともなし', cf:'変化なし', cc:'なし',
+  key:'透明〜半透明の地に虹色の遊色。遊色がないものは評価が下がる。',
+  value:['透明度が高く、内部の遊色が強いものが最高','カット：カボションが多い'],
+  check:['天然は微細なインクルージョンや遊色の層が見える','エチオピア産は水を吸うと一時的に透明になる（ハイドロフェン）。液体に浸けない'],
+  incl:'透明な内部構造、遊色の層',
+  similar:'合成オパール、ガラス、ムーンストーン',
+  treat:[{n:'無処理が基本', k:'N', imp:0, note:''}],
+  origin:[['メキシコ','代表産地'],['エチオピア','クリスタルオパール。水を吸う性質に注意']],
+  price:[['最高品質（透明・遊色が強い）','10万〜50万円'],['標準品質（やや透明・遊色あり）','3万〜10万円'],['低品質（半透明・遊色なし）','5千〜3万円']],
+  idx:['@75','@10','@3','@1'],
+  lab:['鑑別書では「オパール」と記載'],
+  sig:['透明な地に遊色が浮かぶメキシコ産オパール'],
+},
+{
+  id:'canteraopal', ja:'カンテラオパール', en:'Cantera Opal', group:'オパール', colors:['茶','オレンジ'], sw:'#A0673A', cut:'cab',
+  h:'5.5–6.5', ri:[1.37,1.47], riText:'1.45前後', bi:'なし', sg:'2.0前後（母岩で変わる）', optic:'単屈折（非晶質）',
+  uv:'長波・短波ともなし', cf:'変化なし', cc:'なし',
+  key:'メキシコの母岩（流紋岩）ごと磨いたオパール。母岩の模様そのものが特徴。',
+  value:['母岩とオパール部分のコントラスト、オパール部分の色と遊色'],
+  check:['母岩に含まれた状態のオパールなので、母岩そのものが特徴','樹脂で固めたものがある'],
+  incl:'母岩（流紋岩）',
+  similar:'ボルダーオパール、樹脂',
+  treat:[{n:'樹脂含浸', k:'T', imp:2, note:'もろい母岩を固める'}],
+  origin:[['メキシコ','主産地']],
+  price:[], idx:null,
+  lab:['鑑別書では「オパール（母岩付き）」等と記載'],
+  sig:['母岩ごと磨いたメキシコのオパール'],
+},
+{
+  id:'coral', ja:'珊瑚（赤珊瑚）', en:'Precious Coral', group:'有機質', colors:['赤','ピンク'], sw:'#C3302F', cut:'cab',
+  h:'3–4', ri:[1.486,1.658], riText:'1.486–1.658', bi:'0.172', sg:'2.65', optic:'集合体（炭酸カルシウム）',
+  uv:'天然の赤珊瑚は発光しない。染色品は蛍光反応を示すことがある', cf:'変化なし', cc:'なし',
+  key:'日本近海の血赤珊瑚が最高。染色品・樹脂の練り物・ガラスに注意。柔らかく酸・汗に弱い。',
+  value:['色：濃い赤（血赤）が最高。赤 → 桃色の順','傷：傷や「フ（白い斑）」が少ないもの','サイズ：大きいほど希少'],
+  check:[
+    '天然は縦方向の成長線や細かい穴（網目構造）。プラスチック製は表面が滑らか',
+    '染色品：色が割れ目や穴に集中。アセトンを付けた綿棒に色が移る（お客様の石では行わない）',
+    '練り物（粉末を樹脂で固めたもの）・ギルソン：成長線がない',
+    '天然は水を吸わないが、樹脂の模造品は水を吸うことがある'
+  ],
+  incl:'成長線、網目構造、フ（白い斑）',
+  similar:'染色珊瑚、スポンジコーラル、練り物、ギルソンコーラル、ガラス、プラスチック',
+  treat:[{n:'染色', k:'T', imp:3, note:'淡い珊瑚や白珊瑚に色を付けたもの'},{n:'樹脂含浸・充填', k:'T', imp:2, note:'多孔質の珊瑚を固める'},{n:'ワックス・コーティング', k:'E', imp:0, note:'表面の艶出し'}],
+  origin:[['日本（高知・土佐・沖縄）','最高品質の血赤珊瑚'],['イタリア（地中海）','明るい赤やピンク'],['台湾','オレンジがかった珊瑚']],
+  price:[], idx:['@150','@5','@2',''],
+  lab:['国内の鑑別書では「サンゴ」と記載し、染色等の処理を明記'],
+  sig:['成長線と網目構造を持つ有機質の宝石'],
+},
+{
+  id:'emeraldcab', ja:'エメラルドカボション（エメカボ）', en:'Emerald Cabochon', group:'ベリル', colors:['緑'], sw:'#1E7A55', cut:'cab',
+  h:'7.5–8', ri:[1.565,1.602], riText:'1.565–1.602', bi:'0.005–0.009', sg:'2.72', optic:'複屈折（一軸性）',
+  uv:'長波・短波ともなし', cf:'赤色に変化', cc:'なし',
+  key:'インクルージョンの多い原石をカボションにしたもの。ほぼすべて含浸処理済み。',
+  value:['色：深い緑','透明度：透明度の高いものは希少'],
+  check:['天然は庭（ジャルダン）のインクルージョン','含浸品は温めるとオイルがしみ出ることがある','UV：無処理品は強く反応しないが、処理品は微弱な蛍光を示すことがある'],
+  incl:'三相インクルージョン、ジャルダン',
+  similar:'グリーンアベンチュリン、染色石英、ガラス',
+  treat:[{n:'オイル・樹脂含浸', k:'E', imp:0, note:'ほぼすべてが含浸処理済み（無処理は極めて希少）'},{n:'着色含浸', k:'T', imp:3, note:'色付きの含浸材'}],
+  origin:[['コロンビア（ムゾー）','最高品質'],['ザンビア','やや青みがかった緑'],['ブラジル','透明度が高いが色が薄めのものが多い']],
+  price:[['最高品質（深い緑・透明度高い）','5万〜50万円'],['標準品質（やや透明・緑）','1万〜5万円'],['低品質（不透明・淡い緑）','3千〜1万円']],
+  idx:['','','@4〜5','@1'],
+  lab:['エメラルドと同じ扱い'],
+  sig:['ほぼすべてが含浸処理済みのカボション'],
+},
+{
+  id:'sapphirecab', ja:'サファイアカボション（サファカボ）', en:'Sapphire Cabochon', group:'コランダム', colors:['青'], sw:'#2B4C8C', cut:'cab',
+  h:'9', ri:[1.762,1.770], riText:'1.762–1.770', bi:'0.008–0.010', sg:'4.00', optic:'複屈折（一軸性）',
+  uv:'長波：弱い蛍光／短波：なし', cf:'変化なし', cc:'なし',
+  key:'濃いブルーが最高。スター効果があればさらに価値が上がる。合成スター（リンデ）に注意。',
+  value:['色：濃いブルー。淡い青や灰色がかったものは下がる','スター：6条のスターがはっきり中央に出るもの','カット：均整の取れたドーム形'],
+  check:['天然はシルクインクルージョン','合成スター（リンデ等）はスターが完璧すぎ、底面に曲線状の成長線','高温で加熱されたものはシルクが溶けていることがある（スターが弱くなる）','拡散スター（表面拡散でスターを付けたもの）に注意'],
+  incl:'ルチルシルク',
+  similar:'合成スターサファイア、拡散スター、ガラス',
+  treat:[{n:'加熱', k:'E', imp:1, note:'一般的'},{n:'表面拡散（スター・色）', k:'T', imp:3, note:'人工的にスターや色を付ける'}],
+  origin:[['スリランカ（セイロン）','鮮やかな青'],['ミャンマー','濃いブルーの高品質'],['タイ','やや暗い青']],
+  price:[['最高品質（濃い青・スターあり）','5万〜30万円'],['標準品質（青・スターなし）','1万〜5万円'],['低品質（淡い青・透明度低い）','3千〜1万円']],
+  idx:['','','@2〜3','@1'],
+  lab:['サファイアと同じ扱い'],
+  sig:['6条のスターが出るコランダムのカボション'],
+},
+{
+  id:'rubycab', ja:'ルビーカボション（ルビーカボ）', en:'Ruby Cabochon', group:'コランダム', colors:['赤'], sw:'#9F1D35', cut:'cab',
+  h:'9', ri:[1.762,1.770], riText:'1.762–1.770', bi:'0.008–0.010', sg:'4.00', optic:'複屈折（一軸性）',
+  uv:'長波：赤蛍光／短波：なし', cf:'赤が強調', cc:'なし',
+  key:'半透明〜不透明が多い。光を通すもの、スターがきれいに出るものが高評価。鉛ガラス・染色に注意。',
+  value:['色：鮮やかなピジョンブラッドが最高。ピンクがかると下がる','透明度：光を通すものが高評価','カット：均整の取れたドーム形'],
+  check:['天然はシルクインクルージョン','スター効果がきれいに出るものは天然の可能性が高い','染色・オイル：割れ目に色が集中'],
+  incl:'ルチルシルク',
+  similar:'合成スタールビー、ガーネット、染色石英',
+  treat:[{n:'加熱', k:'E', imp:1, note:'一般的'},{n:'染色・オイル含浸・鉛ガラス充填', k:'T', imp:3, note:'低品質品に多い'}],
+  origin:[['ミャンマー（モゴック）','最高品質のピジョンブラッド'],['タイ（チャンタブリー）','やや暗めの赤']],
+  price:[['最高品質（ピジョンブラッド・スターあり）','10万〜50万円'],['標準品質（赤・スターなし）','3万〜10万円'],['低品質（ピンク・透明度低い）','5千〜3万円']],
+  idx:['','','@2〜3','@1'],
+  lab:['ルビーと同じ扱い'],
+  sig:['スターが出ることがあるルビーのカボション'],
+},
+{
+  id:'sphene', ja:'スフェーン（チタナイト）', en:'Sphene / Titanite', group:'スフェーン', colors:['黄','緑','茶'], sw:'#A9B92A', cut:'facet',
+  h:'5–5.5', ri:[1.880,2.034], riText:'1.880–2.034（屈折計の範囲外）', bi:'0.100–0.135', sg:'3.52', optic:'複屈折（二軸性）',
+  uv:'長波・短波ともなし（わずかに黄〜緑の蛍光も）', cf:'変化なし', cc:'わずかに変化',
+  key:'ダイヤモンド以上のファイア（分散0.051）。複屈折が非常に大きく、裏のファセットがはっきり二重に見える。柔らかく欠けやすい。',
+  value:['色：鮮やかな緑が最高。黄色・ブラウン系はやや下がる','ファイア：赤やオレンジの虹色が強く見えるもの','サイズ：1ct以上は希少、3ct以上の高品質はさらに高い','カット：輝きを引き出すカットが良いもの'],
+  check:['ルーペで裏のファセットの稜線がはっきり二重（複屈折0.1以上）','硬度5〜5.5。カットエッジ（角）の欠け・摩耗を必ず確認','天然は薄い板状や針状の内包物','本物はダイヤ以上の虹色。合成・ガラスは輝きが鈍い'],
+  incl:'板状インクルージョン、針状結晶、液体インクルージョン',
+  similar:'デマントイド、ペリドット、イエローダイヤモンド、ジルコン、ガラス',
+  treat:[{n:'無処理が基本', k:'N', imp:0, note:'まれに加熱（オレンジ〜赤に）'}],
+  origin:[['マダガスカル','最も高品質。鮮やかな緑で強いファイア'],['ロシア（ウラル）','緑が濃く強いファイア'],['ブラジル','黄緑〜ブラウン系が多い'],['パキスタン','黄緑色']],
+  price:[['最高品質（鮮やかな緑・強いファイア・高透明度）','10万〜50万円'],['標準品質（黄緑・ファイア中程度）','2万〜10万円'],['低品質（ブラウン・透明度低い・ファイア弱い）','5千〜2万円']],
+  idx:['','@10','@5〜8','@1'],
+  lab:['鑑別書では「スフェーン（チタナイト）」'],
+  sig:['ダイヤ以上のファイアと、はっきり二重に見える裏面'],
+},
+{
+  id:'redspinel', ja:'レッドスピネル', en:'Red Spinel', group:'スピネル', colors:['赤','ピンク'], sw:'#C8183F', cut:'facet',
+  h:'8', ri:[1.712,1.736], riText:'1.712–1.736（多くは1.718）', bi:'なし', sg:'3.60', optic:'単屈折',
+  uv:'長波：中〜強い赤〜オレンジ蛍光（クロムを含む天然品）／短波：弱〜中程度', cf:'赤〜ピンク', cc:'なし',
+  key:'かつてルビーと混同された石。単屈折なのでルビーと区別できる。通常は無処理。',
+  value:['色：ルビーのような純赤、ネオンピンク（マヘンゲ産）が高評価','透明度：クリーンな石が多い'],
+  check:['単屈折（偏光器で暗いまま）。ルビーは複屈折','八面体の小さな結晶が列になったインクルージョン','カーブした色帯を持たない','合成スピネル（ベルヌイ法）は異常複屈折（偏光器でまだら模様）'],
+  incl:'八面体の結晶インクルージョン、粒状インクルージョン',
+  similar:'ルビー、レッドジルコン、ルベライト、レッドベリル、ロードライトガーネット、ロードクロサイト',
+  treat:[{n:'無処理が基本', k:'N', imp:0, note:'まれに加熱'}],
+  origin:[['ミャンマー（モゴック）','純赤の高品質'],['タンザニア（マヘンゲ）','ネオンピンク'],['スリランカ・ベトナム・タジキスタン','産出あり']],
+  price:[], idx:null,
+  lab:['鑑別書では「スピネル」と記載。加熱は分析報告書で確認'],
+  warn:['シート③ではUV・色の欄に「ピンク」とあるが、本表では赤〜ピンクとして整理'],
+  sig:['ルビーと似るが単屈折。八面体の結晶インクルージョン'],
+},
+{
+  id:'bluespinel', ja:'ブルースピネル', en:'Blue Spinel', group:'スピネル', colors:['青'], sw:'#2C55B8', cut:'facet',
+  h:'8', ri:[1.712,1.736], riText:'1.712–1.736（多くは1.718）', bi:'なし', sg:'3.60', optic:'単屈折',
+  uv:'天然の灰青色品は不活性。コバルト着色品は赤く蛍光することがある', cf:'コバルトブルーは赤く見える', cc:'なし',
+  key:'天然のコバルトブルーは非常に希少で高価。合成ブルースピネルは模造石として非常に多い。',
+  value:['色：鮮やかなコバルトブルーが最高。多くは灰色がかった青','透明度：クリーンなものが多い'],
+  check:['単屈折で屈折率1.72前後。サファイア（1.76・複屈折）と区別','合成ブルースピネルは屈折率1.727〜1.730とやや高く、異常複屈折を示す','チェルシーフィルターで赤 → コバルト着色（天然・合成ともに）。産地・合成の判断は鑑別機関で'],
+  incl:'八面体の結晶インクルージョン',
+  similar:'サファイア、アクアマリン（合成スピネルが模造に使われる）、ガラス',
+  treat:[{n:'無処理が基本', k:'N', imp:0, note:''}],
+  origin:[['ベトナム（ルックイエン）・スリランカ','コバルトスピネルの産地']],
+  price:[], idx:null,
+  lab:['コバルトスピネルは鑑別書のコメントや分析報告書で記載されることがある'],
+  warn:['シート③のブルースピネル行はインペリアルトパーズの数値（屈折率1.609〜1.643など）が入っていたため、GIA資料の値に差し替えた'],
+  sig:['合成品が模造石として多い単屈折の青い石'],
+},
+{
+  id:'diamond', ja:'ダイヤモンド', en:'Diamond', group:'ダイヤモンド', colors:['無色','黄','ピンク','青'], sw:'#E6EEF3', cut:'facet', added:true,
+  h:'10', ri:[2.417,2.417], riText:'2.417（屈折計の範囲外）', bi:'なし', sg:'3.52', optic:'単屈折',
+  uv:'長波：青い蛍光が多い（なし〜強いまで）', cf:'―', cc:'なし',
+  key:'4C（カラー・クラリティ・カット・カラット）で評価。合成（ラボグロウン）と模造石（モアサナイト・CZ）の見分けが重要。',
+  value:['カラー：D〜Zの23段階（GIA基準）。Dが無色で最高','クラリティ：FL・IF・VVS1/2・VS1/2・SI1/2・I1/2/3','カット：Excellent〜Poor（ラウンドブリリアント）','カラット：重量。1ct・0.5ctなど節目で価格が跳ねる','ファンシーカラー：色の強さ（Faint〜Fancy Vivid）で評価'],
+  check:['熱伝導テスターで反応 → ダイヤ or モアサナイト。モアサナイトは複屈折で裏のファセットが二重','CZ（キュービックジルコニア）は比重5.6と重く、ファイアが強すぎる','合成（HPHT・CVD）は機器分析が必要。ガードルのレーザー刻印やレポートで確認','熱で割れ目を処理したもの（フラクチャーフィリング）はフラッシュ効果'],
+  incl:'結晶、フェザー、クラウド、ニードル',
+  similar:'モアサナイト、キュービックジルコニア、白いサファイア、ジルコン、ガラス、合成ダイヤモンド',
+  treat:[{n:'レーザードリリング', k:'T', imp:2, note:'黒い内包物にレーザーで穴を開けて漂白'},{n:'フラクチャーフィリング', k:'T', imp:3, note:'割れ目にガラスを充填'},{n:'HPHT処理・照射', k:'T', imp:2, note:'色を改善・変化させる'},{n:'コーティング', k:'T', imp:3, note:'色を付ける'}],
+  origin:[['ボツワナ・ロシア・カナダ・南アフリカ・オーストラリア','主な産地（ピンクはオーストラリアのアーガイル鉱山が有名だった）']],
+  price:[], idx:null,
+  lab:['ダイヤモンドの品質評価書は「鑑定書（グレーディングレポート）」。色石の「鑑別書」とは別物','4Cの評価基準はGIAが作ったもの。国内ではCGL・AGTなどが鑑定書を発行','ファンシーカラーダイヤはカラーダイヤ専門店（シート記載：Cosmic）などで色・明度・彩度の評価を確認','合成ダイヤは鑑定書・鑑別書に明記される'],
+  sig:['硬度10・屈折率2.417。4Cで評価される'],
+}
+];
+
+/* 処理の種類（シート「案件トーク」の定義＋AGL・GIAの考え方） */
+const TREATMENTS = [
+  {n:'加熱', k:'E', imp:1, stones:'ルビー、サファイア、タンザナイト、アクアマリン、モルガナイト、トルマリン、トパーズ', what:'熱を加えて色を鮮やかにし、内包物を目立ちにくくする。もっとも一般的な処理', detect:'シルクが点状に溶ける、内包結晶まわりの円盤状の割れ。ブルーサファイアは短波UVで白っぽい青緑蛍光'},
+  {n:'無色オイル含浸', k:'E', imp:0, stones:'エメラルド', what:'亀裂に無色のオイル（シダーウッドオイル等）を染み込ませ、見た目を改善', detect:'割れ目のフラッシュ効果や乾いた跡。温めるとしみ出る。GIAは程度を None〜Significant で記載'},
+  {n:'無色樹脂（ポリマー）含浸', k:'E', imp:1, stones:'エメラルド、トルマリン、レッドベリル', what:'割れ目に樹脂を充填。オイルより耐久性がある', detect:'割れ目の青〜オレンジのフラッシュ効果'},
+  {n:'表面のワックス', k:'E', imp:0, stones:'ヒスイ、トルコ石、珊瑚', what:'表面の艶出し。一般的で価値への影響はほぼない', detect:'熱した針で溶ける（実施しない）'},
+  {n:'照射', k:'T', imp:1, stones:'トパーズ（ブルー）、トルマリン、ダイヤモンド、ベリル（マシーシェ）', what:'放射線で色を変える。石によっては光で退色する', detect:'多くは検出困難。機器分析が必要'},
+  {n:'ベリリウム拡散', k:'T', imp:3, stones:'サファイア（オレンジ・イエロー・パパラチア）、ルビー', what:'高温でベリリウムを石の内部に拡散させて色を付ける。改造に近い', detect:'通常の鑑別では判別が難しい。化学分析（LA-ICP-MS）'},
+  {n:'表面拡散（チタン等）', k:'T', imp:3, stones:'ブルーサファイア、スター', what:'表面の薄い層だけに色やスターを付ける', detect:'液浸すると稜線やガードルに色が集中'},
+  {n:'鉛ガラス充填', k:'T', imp:3, stones:'ルビー、サファイア', what:'割れの多い原石に鉛ガラスを充填。GIAは複合石として扱う', detect:'フラッシュ効果、ガラス中の気泡、割れ目の光沢差。酸や修理時の熱で劣化'},
+  {n:'着色オイル・染色', k:'T', imp:3, stones:'エメラルド、ヒスイ（C貨）、珊瑚、ルビー', what:'石が本来持たない色を付ける', detect:'色が割れ目や粒の境目に集中'},
+  {n:'漂白＋樹脂含浸（B貨）', k:'T', imp:3, stones:'ヒスイ', what:'酸で不純物を抜き、樹脂で固める', detect:'表面のクモの巣状の溝、UV蛍光、赤外分光（FTIR）'},
+  {n:'コーティング', k:'T', imp:3, stones:'トパーズ、タンザナイト、ダイヤモンド', what:'表面に色の膜を付ける', detect:'稜線の擦れ・剥がれ、色むら'},
+  {n:'スモーク・シュガー処理', k:'T', imp:3, stones:'オパール', what:'地色を人工的に黒くする', detect:'拡大すると黒い粒が表面近くに集中'},
+  {n:'レーザードリリング', k:'T', imp:2, stones:'ダイヤモンド', what:'黒い内包物までレーザーで穴を開けて漂白', detect:'表面から内包物へ続く細い管'},
+  {n:'HPHT処理', k:'T', imp:2, stones:'ダイヤモンド', what:'高温高圧で色を改善・変化させる', detect:'機器分析が必要'},
+  {n:'張り合わせ（ダブレット・トリプレット）', k:'A', imp:3, stones:'オパール、ルビー、サファイア、エメラルド、ガーネット＋ガラス', what:'2〜3層を接着した石。天然石同士の張り合わせも多い', detect:'ガードル付近の接合面、平らな気泡層、上下の光沢や色の違い'}
+];
+
+const KIND = {
+  E:{label:'エンハンスメント', short:'E', desc:'もともと持っている素材の良さを、目に見える形に整える処理。天然石としての価値が認められる'},
+  T:{label:'トリートメント', short:'T', desc:'石本来が持っていない性質を後から与えるもの＝改造に近い。天然石としての価値は大きく下がる'},
+  A:{label:'貼り合わせ・複合', short:'A', desc:'複数の素材を接着した石。単体の天然石とは別物として扱う'},
+  N:{label:'通常は無処理', short:'N', desc:'処理されることがほとんどない宝石'}
+};
+const IMPACT = ['影響ほぼなし','やや下がる','大きく下がる','大幅減'];
+
+/* 社内グレード（シート「SREのデータまとめ」） */
+const GRADES = {
+  sapphire:{color:['濃いロイヤルブルー','中程度の青色','薄い青色／色ムラあり'], kizu:['目立つキズなし','小さなキズあり','目立つキズあり'], teri:['強い光沢','中程度の光沢','弱い光沢']},
+  ruby:{color:['鮮やかな赤〜ピジョンブラッド','中程度の赤色','暗い赤／ピンク寄り'], kizu:['目立つキズなし','小さなキズあり','目立つキズあり'], teri:['強い光沢','中程度の光沢','弱い光沢']},
+  emerald:{color:['濃い鮮やかな緑色','中程度の緑色','薄い緑／黄色味がある'], kizu:['目立つキズなし／少ない','通常のインクルージョン','多数のキズ／インクルージョン'], teri:['強い光沢','中程度の光沢','弱い光沢']}
+};
+
+</script>
+<script>
+(function(){
+'use strict';
+const $app = document.getElementById('app');
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const store = {
+  get(k, d){ try{ const v = localStorage.getItem('gemguide:'+k); return v == null ? d : JSON.parse(v); }catch(e){ return d; } },
+  set(k, v){ try{ localStorage.setItem('gemguide:'+k, JSON.stringify(v)); }catch(e){} }
+};
+const byId = Object.fromEntries(GEMS.map(g => [g.id, g]));
+const GROUP_ORDER = ['コランダム','ベリル','クリソベリル','トパーズ','トルマリン','ガーネット','スピネル','オリビン','ゾイサイト','スフェーン','ヒスイ','オパール','有機質','ダイヤモンド'];
+const COLOR_CHIPS = [['赤','#C0213A'],['ピンク','#E57AA4'],['オレンジ','#E8792B'],['黄','#D8B636'],['緑','#2E8B57'],['青','#2B57B5'],['紫','#7B4FB0'],['茶','#8A5A33'],['無色','#E8EEF2'],['遊色','linear-gradient(90deg,#e5484d,#f0b429,#30a46c,#3e63dd)']];
+
+/* ---------- theme ---------- */
+(function(){
+  const t = store.get('theme', null);
+  if (t) document.documentElement.setAttribute('data-theme', t);
+  document.getElementById('themeBtn').addEventListener('click', () => {
+    const cur = document.documentElement.getAttribute('data-theme')
+      || (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+    const next = cur === 'dark' ? 'light' : 'dark';
+    document.documentElement.setAttribute('data-theme', next);
+    store.set('theme', next);
+  });
+})();
+
+/* ---------- gem icon ---------- */
+let gid = 0;
+function gemIcon(g){
+  const id = 'g' + (++gid);
+  const c = g.sw, c2 = g.sw2 || g.sw;
+  if (g.cut === 'opal'){
+    return `<svg class="gemicon" viewBox="0 0 48 48" aria-hidden="true"><defs><clipPath id="${id}"><ellipse cx="24" cy="24" rx="20" ry="16"/></clipPath>
+    <radialGradient id="${id}h" cx=".35" cy=".3" r=".7"><stop offset="0" stop-color="#fff" stop-opacity=".55"/><stop offset=".5" stop-color="#fff" stop-opacity="0"/></radialGradient></defs>
+    <g clip-path="url(#${id})"><rect width="48" height="48" fill="${c}"/>
+    <circle cx="14" cy="20" r="7" fill="#e5484d" opacity=".8"/><circle cx="27" cy="15" r="6" fill="#30a46c" opacity=".8"/><circle cx="33" cy="28" r="7" fill="#3e63dd" opacity=".8"/><circle cx="20" cy="32" r="6" fill="#f0b429" opacity=".75"/><circle cx="38" cy="18" r="4" fill="#12a594" opacity=".8"/>
+    <rect width="48" height="48" fill="url(#${id}h)"/></g><ellipse cx="24" cy="24" rx="20" ry="16" fill="none" stroke="#000" stroke-opacity=".2"/></svg>`;
+  }
+  if (g.cut === 'cab'){
+    return `<svg class="gemicon" viewBox="0 0 48 48" aria-hidden="true"><defs>
+    <radialGradient id="${id}" cx=".38" cy=".32" r=".75"><stop offset="0" stop-color="#fff" stop-opacity=".7"/><stop offset=".25" stop-color="${c}" stop-opacity="1"/><stop offset="1" stop-color="#000" stop-opacity=".55"/></radialGradient></defs>
+    <ellipse cx="24" cy="24" rx="20" ry="16" fill="${c}"/><ellipse cx="24" cy="24" rx="20" ry="16" fill="url(#${id})"/>
+    ${g.id==='cateye'?'<path d="M24 8.5c1.2 5 1.2 26 0 31" stroke="#fff" stroke-opacity=".85" stroke-width="1.6" fill="none"/>':''}
+    ${g.id==='sapphirecab'||g.id==='rubycab'?'<g stroke="#fff" stroke-opacity=".55" stroke-width=".9"><path d="M24 12v24M14 18l20 12M14 30l20-12"/></g>':''}
+    <ellipse cx="24" cy="24" rx="20" ry="16" fill="none" stroke="#000" stroke-opacity=".2"/></svg>`;
+  }
+  // facet: round brilliant, top view
+  const P = (r, n, off) => Array.from({length:n}, (_, i) => { const a = (i/n)*Math.PI*2 + off; return [24 + r*Math.cos(a), 24 + r*Math.sin(a)]; });
+  const o = P(21, 8, Math.PI/8), t = P(10.5, 8, 0);
+  let facets = '';
+  for (let i = 0; i < 8; i++){
+    const a = o[i], b = o[(i+1)%8], ti = t[(i+1)%8];
+    const op = [0.28,0.08,0.18,0.02,0.24,0.12,0.30,0.05][i];
+    const tone = i%2 ? '#000' : '#fff';
+    facets += `<polygon points="${a} ${b} ${ti}" fill="${tone}" fill-opacity="${op}"/>`;
+    const t1 = t[i], t2 = t[(i+1)%8];
+    facets += `<polygon points="${a} ${t1} ${t2}" fill="${i%2?'#fff':'#000'}" fill-opacity="${[0.1,0.22,0.06,0.3,0.12,0.2,0.04,0.26][i]}"/>`;
+  }
+  const fill = g.sw2 ? `url(#${id})` : c;
+  const grad = g.sw2 ? `<defs><linearGradient id="${id}" x1="0" y1="0" x2="1" y2="1"><stop offset=".45" stop-color="${c}"/><stop offset=".55" stop-color="${c2}"/></linearGradient></defs>` : '';
+  return `<svg class="gemicon" viewBox="0 0 48 48" aria-hidden="true">${grad}<polygon points="${o.join(' ')}" fill="${fill}"/>${facets}
+    <polygon points="${t.join(' ')}" fill="#fff" fill-opacity=".14" stroke="#fff" stroke-opacity=".35" stroke-width=".6"/>
+    <polygon points="${o.join(' ')}" fill="none" stroke="#000" stroke-opacity=".25" stroke-width=".8"/></svg>`;
+}
+
+const kindTag = k => `<span class="kind ${k}">${esc(KIND[k].label)}</span>`;
+const impTag = l => `<span class="imp" data-l="${l}" title="価値への影響"><i></i><i></i><i></i>${esc(IMPACT[l])}</span>`;
+
+/* ---------- list ---------- */
+let listState = store.get('list', {q:'', color:''});
+function viewList(){
+  const q = listState.q.trim().toLowerCase();
+  const hits = GEMS.filter(g => {
+    if (listState.color && !g.colors.includes(listState.color)) return false;
+    if (!q) return true;
+    const hay = [g.ja, g.en, g.group, g.similar, g.key, g.incl, ...(g.origin||[]).flat(), ...(g.treat||[]).map(t=>t.n)].join(' ').toLowerCase();
+    return hay.includes(q);
+  });
+  const groups = GROUP_ORDER.map(gr => [gr, hits.filter(g => g.group === gr)]).filter(x => x[1].length);
+  $app.innerHTML = `<section class="view">
+    <label class="search" for="q"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="10" cy="10" r="6"/><path d="m15 15 5 5"/></svg>
+      <input id="q" type="search" placeholder="名前・産地・処理・類似石で検索" value="${esc(listState.q)}" autocomplete="off"></label>
+    <div class="chips" role="group" aria-label="色で絞り込み">
+      <button class="chip" type="button" data-color="" aria-pressed="${!listState.color}">すべて</button>
+      ${COLOR_CHIPS.map(([c,v]) => `<button class="chip" type="button" data-color="${c}" aria-pressed="${listState.color===c}"><span class="dot" style="background:${v}"></span>${c}</button>`).join('')}
+    </div>
+    <div class="count">${hits.length} 種</div>
+    ${hits.length ? `<div class="list">${groups.map(([gr, gs]) => `<div class="groupHead">${esc(gr)}</div>` + gs.map(g => `
+      <a class="row" href="#g-${g.id}">${gemIcon(g)}
+        <div><div class="name">${esc(g.ja)}</div><div class="sub">${esc(g.key)}</div></div>
+        <div class="meta">硬度<b>${esc(g.h)}</b>RI<b>${esc(fmtRi(g))}</b></div>
+      </a>`).join('')).join('')}</div>` : `<div class="empty">該当する宝石がありません。検索語を短くするか、色の絞り込みを外してください。</div>`}
+    <p class="foot">出典：社内シート「★熊★」（宝石について①〜③、案件トーク、査定手順、値段まとめ）。不足分はGIA・AGL・CGLなど鑑別機関の公開情報で補足。</p>
+  </section>`;
+  const qi = document.getElementById('q');
+  qi.addEventListener('input', () => { listState.q = qi.value; store.set('list', listState); rerenderListKeepFocus(); });
+  $app.querySelectorAll('[data-color]').forEach(b => b.addEventListener('click', () => { listState.color = b.dataset.color; store.set('list', listState); viewList(); }));
+}
+function rerenderListKeepFocus(){
+  const pos = document.getElementById('q').selectionStart;
+  viewList();
+  const qi = document.getElementById('q'); qi.focus(); try{ qi.setSelectionRange(pos, pos); }catch(e){}
+}
+const fmtRi = g => g.ri[0] === g.ri[1] ? String(g.ri[0]) : `${g.ri[0].toFixed(3)}–${g.ri[1].toFixed(3)}`;
+
+/* ---------- detail ---------- */
+function viewGem(g){
+  let n = 0; const sec = (title, body) => `<div class="card"><h2><span class="n">${String(++n).padStart(2,'0')}</span>${title}</h2>${body}</div>`;
+  const grade = g.grade && GRADES[g.grade];
+  $app.innerHTML = `<section class="view">
+    <a class="back" href="#gems">← 図鑑に戻る</a>
+    <div class="hero">${gemIcon(g)}<div>
+      <h1>${esc(g.ja)}</h1><div class="en">${esc(g.en)}</div>
+      <span class="tag">${esc(g.group)}</span> ${g.added?'<span class="tag add">鑑別機関情報で追加</span>':''}
+    </div></div>
+    <div class="keyline"><span class="eyebrow">まず覚える</span>${esc(g.key)}</div>
+    <dl class="spec">
+      <div><dt>モース硬度</dt><dd class="mono">${esc(g.h)}</dd></div>
+      <div><dt>比重</dt><dd class="mono">${esc(g.sg)}</dd></div>
+      <div><dt>複屈折量</dt><dd class="mono">${esc(g.bi)}</dd></div>
+      <div class="wide"><dt>屈折率（RI）</dt><dd><span class="mono">${esc(g.riText)}</span>　<span class="muted">${esc(g.optic)}</span></dd></div>
+      <div class="wide"><dt>UVライト反応</dt><dd>${esc(g.uv)}</dd></div>
+      <div class="wide"><dt>チェルシーフィルター</dt><dd>${esc(g.cf)}</dd></div>
+      <div class="wide"><dt>白熱灯カラーチェンジ</dt><dd>${esc(g.cc)}</dd></div>
+    </dl>
+    ${sec('価値を決めるポイント', `<ul>${g.value.map(v=>`<li>${esc(v)}</li>`).join('')}</ul>`)}
+    ${sec('判別の注意点（天然・合成・類似石）', `<ul>${g.check.map(v=>`<li>${esc(v)}</li>`).join('')}</ul>
+      <dl class="kv"><dt>天然の内包物</dt><dd>${esc(g.incl)}</dd><dt>類似石</dt><dd>${esc(g.similar)}</dd></dl>
+      ${g.fluo ? `<div class="eyebrow" style="margin-top:4px">色別の蛍光（シート②）</div><div class="tbl"><table><thead><tr><th>色</th><th>蛍光</th><th>蛍光色</th><th>備考</th></tr></thead><tbody>${g.fluo.map(r=>`<tr>${r.map(x=>`<td>${esc(x)}</td>`).join('')}</tr>`).join('')}</tbody></table></div>`:''}`)}
+    ${sec('処理の種類と価値への影響', g.treat.map(t => `<div class="tr"><div class="h"><span class="nm">${esc(t.n)}</span>${kindTag(t.k)}${t.k!=='N'?impTag(t.imp):''}</div>${t.note?`<div class="note">${esc(t.note)}</div>`:''}</div>`).join('')
+      + (g.treatNote ? `<p class="note-s">${esc(g.treatNote)}</p>` : '') + `<p class="note-s"><a href="#treat">処理の種類をまとめて見る →</a></p>`)}
+    ${sec('産地と特徴', `<div class="origin">${g.origin.map(([a,b])=>`<div><b>${esc(a)}</b><span>${esc(b)}</span></div>`).join('')}</div>`)}
+    ${(g.price.length || g.idx) ? sec('相場感（1ctあたり）', `
+      ${g.price.length ? `<div class="tbl"><table><tbody>${g.price.map(([a,b])=>`<tr><td>${esc(a)}</td><td class="num">${esc(b)}</td></tr>`).join('')}</tbody></table></div>`:''}
+      ${g.idx ? `<div class="eyebrow">社内指標（値段まとめ）</div><div class="idx">${['高品質','高グレード','中グレード','低グレード'].map((l,i)=>`<div><span>${l}</span><b>${esc(g.idx[i]||'―')}</b></div>`).join('')}</div>`:''}
+      <p class="note-s">相場はシート記載の目安。社内指標の単位はシート「宝石の値段まとめ」の表記のまま。</p>`) : ''}
+    ${grade ? sec('社内グレード基準（A / B / C）', `<div class="grade"><div class="gh"></div><div class="gh">A</div><div class="gh">B</div><div class="gh">C</div>
+      ${[['色','color'],['キズ','kizu'],['テリ','teri']].map(([l,k])=>`<div class="gl">${l}</div>${grade[k].map(x=>`<div>${esc(x)}</div>`).join('')}`).join('')}</div>
+      <p class="note-s">シート「SREのデータまとめ」より。記録項目：色・キズ・テリ・1ct単価・産地・カット・枠の良し悪し・インクルージョン・鑑別書。</p>`) : ''}
+    ${sec('鑑別書・鑑別機関でのチェック', `<ul class="lab">${g.lab.map(v=>`<li>${esc(v)}</li>`).join('')}</ul>`)}
+    ${g.warn ? g.warn.map(w=>`<div class="warn"><b>シートとの相違</b>　${esc(w)}</div>`).join('') : ''}
+    <p class="foot">内容は査定の目安です。高額品・判断に迷う石は必ず鑑別機関の鑑別書・分析報告書で確認してください。</p>
+  </section>`;
+}
+
+/* ---------- treatments ---------- */
+function viewTreat(){
+  $app.innerHTML = `<section class="view">
+    <div><div class="eyebrow">Treatments</div><h1 style="font-family:var(--f-display);font-size:26px">処理の種類</h1></div>
+    <div class="legend">
+      ${['E','T','A'].map(k=>`<div class="card"><div>${kindTag(k)}</div><p style="font-size:14px">${esc(KIND[k].desc)}</p></div>`).join('')}
+    </div>
+    <div class="warn"><b>価格への影響</b>　同じ大きさ・色でも、トリートメント品は加熱品の1/2〜1/10以下になることがある（案件トーク ポイントより）。</div>
+    <div class="card">
+      ${TREATMENTS.map(t=>`<div class="tr tcard"><div class="row2"><h3>${esc(t.n)}</h3>${kindTag(t.k)}${impTag(t.imp)}</div>
+        <div style="font-size:14px">${esc(t.what)}</div>
+        <dl class="kv"><dt>主な宝石</dt><dd>${esc(t.stones)}</dd><dt>見分け方</dt><dd>${esc(t.detect)}</dd></dl></div>`).join('')}
+    </div>
+    <p class="foot">区分は国内の鑑別団体（AGL）とGIAの考え方に沿った一般的な扱い。宝石ごとに扱いが変わる処理（樹脂含浸など）は各宝石のページを確認。</p>
+  </section>`;
+}
+
+/* ---------- identification ---------- */
+const FLOW = [
+  ['基本情報の確認','宝石の種類の特定／サイズと重量（カラット）の測定／カット形状の確認'],
+  ['鑑別','屈折率の測定（屈折計）／比重の測定（比重計）'],
+  ['品質評価','色味（色相・彩度・明度）／透明度／インクルージョン／表面の傷やエッジの状態'],
+  ['真贋判定','処理石か（加熱・照射・充填など）／合成石か（インクルージョンのパターン・蛍光反応）／模造石か'],
+  ['最終評価','4C（カット・カラー・クラリティ・カラット）／マーケット価値の算定（希少性も考慮）']
+];
+const QUALITY = [
+  ['色','色味／色の均一性と濃淡／色変化・多色性の有無'],
+  ['表面','ファセットの接合部の鋭さ／すり減りやチップの有無'],
+  ['内部','内包物の確認'],
+  ['UV','長波・短波での反応／蛍光の色と強度を記録／蛍光分布の均一性'],
+  ['屈折率','屈折計で測定／複屈折の有無と程度'],
+  ['処理・合成','顕微鏡で特徴的な構造を観察／紫外線反応のパターン'],
+  ['総合','色味・透明度・キズ・照り（輝き）の総合評価、希少性']
+];
+const TOOLS = [
+  ['ルーペ（10倍）・顕微鏡','内包物の種類で天然・合成・産地を判断。ファセットエッジの鋭さ、裏面の二重像、張り合わせの接合面'],
+  ['屈折計','屈折率と複屈折量。測れる上限は約1.81（それ以上は「範囲外」＝デマントイド、スフェーン、ジルコン、ダイヤモンド等）'],
+  ['偏光器','単屈折／複屈折／集合体の判別。合成スピネルの異常複屈折'],
+  ['二色鏡（ダイクロスコープ）','多色性の確認（タンザナイト、アレキサンドライト、トルマリンで強い）'],
+  ['UVライト','長波365nm・短波254nm。ルビーの赤蛍光、合成エメラルドの蛍光、ヒスイB貨の青白い蛍光'],
+  ['チェルシーフィルター','クロム発色（ルビー、エメラルド）やコバルト発色（合成ブルースピネル）が赤く見える'],
+  ['分光器','吸収線：ルビーのクロム、サファイアの鉄、パライバの銅、染料'],
+  ['比重','重さで類似石を分ける（アクアマリン2.72／ブルートパーズ3.53、CZ 5.6 など）'],
+  ['熱伝導テスター','ダイヤモンドとモアサナイトに反応。CZ・ガラスは反応しない']
+];
+let riVal = store.get('ri', 1.762);
+function viewCheck(){
+  $app.innerHTML = `<section class="view">
+    <div><div class="eyebrow">Identification</div><h1 style="font-family:var(--f-display);font-size:26px">鑑別と査定の手順</h1></div>
+    <div class="card"><h2>屈折率から探す</h2>
+      <div class="ri-input"><label for="riNum" class="muted" style="font-size:13px">測定値</label>
+        <input id="riNum" type="number" step="0.001" min="1.35" max="2.45" value="${riVal}">
+        <input id="riRange" type="range" min="1.35" max="2.45" step="0.001" value="${riVal}" aria-label="屈折率スライダー"></div>
+      <div id="riOut"></div>
+      <p class="note-s">±0.005の誤差を含めて一致する宝石を強調表示。1.81を超える値は通常の屈折計では測れない（範囲外）。</p>
+    </div>
+    <div class="card"><h2>査定の基本フロー</h2><div class="flow">${FLOW.map(([a,b])=>`<div class="step"><div><b>${a}</b><span>${b}</span></div></div>`).join('')}</div></div>
+    <div class="card"><h2>総合品質評価のチェック項目</h2><dl class="kv">${QUALITY.map(([a,b])=>`<dt>${a}</dt><dd>${b}</dd>`).join('')}</dl></div>
+    <div class="card"><h2>器具と使いどころ</h2><dl class="kv">${TOOLS.map(([a,b])=>`<dt>${a}</dt><dd>${b}</dd>`).join('')}</dl></div>
+  </section>`;
+  const num = document.getElementById('riNum'), rng = document.getElementById('riRange');
+  const upd = v => { riVal = Math.round(v*1000)/1000; store.set('ri', riVal); drawRi(); };
+  num.addEventListener('input', () => { const v = parseFloat(num.value); if (!isNaN(v)){ rng.value = v; upd(v); } });
+  rng.addEventListener('input', () => { num.value = rng.value; upd(parseFloat(rng.value)); });
+  drawRi();
+}
+function drawRi(){
+  const lo = 1.35, hi = 2.45, pct = v => ((v - lo) / (hi - lo) * 100);
+  const seen = new Set();
+  const rows = GEMS.filter(g => { const k = g.ri.join('-') + g.group; if (/cab$/.test(g.id) || seen.has(k)) return false; seen.add(k); return true; })
+    .sort((a,b) => a.ri[0] - b.ri[0]);
+  const tol = 0.005;
+  const hits = rows.filter(g => riVal >= g.ri[0] - tol && riVal <= g.ri[1] + tol);
+  const out = document.getElementById('riOut');
+  out.innerHTML = `<p style="margin:4px 0 8px"><span class="mono">${riVal.toFixed(3)}</span> に該当：${hits.length ? hits.map(g=>`<a href="#g-${g.id}"><b>${esc(g.ja)}</b></a>`).join('、') : '<span class="muted">なし</span>'}${riVal>1.81?'　<span class="kind A">範囲外（OTL）</span>':''}</p>
+    <div class="tbl" style="border:0"><div style="min-width:420px" class="riRows">
+    <div class="riAxis"><div></div><div>${[1.4,1.6,1.8,2.0,2.2,2.4].map(v=>`<span style="left:${pct(v)}%">${v.toFixed(1)}</span>`).join('')}</div></div>
+    ${rows.map(g => { const hit = hits.includes(g);
+      return `<a class="riRow ${hit?'hit':(hits.length?'dim':'')}" href="#g-${g.id}"><span>${esc(g.ja.replace(/（.*）/,''))}</span><span class="bar"><i style="left:${pct(g.ri[0])}%;width:${Math.max(pct(g.ri[1])-pct(g.ri[0]),0.4)}%;background:${g.sw}"></i><span class="cur" style="left:${pct(riVal)}%"></span></span></a>`; }).join('')}
+    </div></div>`;
+}
+
+/* ---------- reference ---------- */
+function viewRef(){
+  const withIdx = GEMS.filter(g => g.idx);
+  $app.innerHTML = `<section class="view">
+    <div><div class="eyebrow">Reference</div><h1 style="font-family:var(--f-display);font-size:26px">鑑別書の読み方と資料</h1></div>
+    <div class="card"><h2>書類の種類</h2><dl class="kv">
+      <dt>鑑別書</dt><dd>宝石の種類、天然・合成・模造の別、処理の有無を記載。色石・ダイヤ共通。品質（グレード）や価格は書かれない</dd>
+      <dt>鑑定書</dt><dd>ダイヤモンドの品質評価書（グレーディングレポート）。4C（カラー・クラリティ・カット・カラット）を評価</dd>
+      <dt>分析報告書</dt><dd>産地、非加熱、ピジョンブラッド・ロイヤルブルーなど色の評価、ベリリウム拡散の有無など、通常の鑑別書では分からない項目を機器分析で報告</dd>
+    </dl></div>
+    <div class="card"><h2>主な鑑別機関</h2><dl class="kv">
+      <dt>CGL</dt><dd>中央宝石研究所。国内最大手。鑑別書・ダイヤの鑑定書・分析報告書（産地・処理）</dd>
+      <dt>AGL</dt><dd>宝石鑑別団体協議会。国内の鑑別機関が加盟し、鑑別書の記載ルール（処理の表記など）を定めている</dd>
+      <dt>GIA</dt><dd>米国宝石学会。ダイヤの4Cを作った機関。色石レポートで加熱の有無・産地・エメラルドの含浸の程度を記載</dd>
+      <dt>海外ラボ</dt><dd>GRS・Gübelin・SSEFなど。ルビー・サファイアの産地や「ピジョンブラッド」「ロイヤルブルー」の記載で知られる</dd>
+    </dl></div>
+    <div class="card"><h2>GIAレポートの主な表記</h2><div class="tbl"><table><thead><tr><th>表記</th><th>意味</th></tr></thead><tbody>
+      <tr><td>No indications of heating</td><td>加熱の痕跡なし（非加熱）</td></tr>
+      <tr><td>Indications of heating</td><td>加熱の痕跡あり</td></tr>
+      <tr><td>…with minor / moderate / significant residues</td><td>加熱時の残留物（フラックス等）の量</td></tr>
+      <tr><td>Clarity enhancement: None / Minor / Moderate / Significant</td><td>エメラルド等の含浸の程度</td></tr>
+      <tr><td>Origin</td><td>産地の見解</td></tr>
+      <tr><td>Composite / Manufactured product</td><td>鉛ガラス充填など、複合石・人工的な製品</td></tr>
+      <tr><td>Laboratory-grown</td><td>合成（ラボグロウン）</td></tr>
+    </tbody></table></div></div>
+    <div class="card"><h2>鑑別書を受け取ったら確認すること</h2><ul>
+      <li>発行機関と発行日（古い鑑別書は当時の技術で判定されている）</li>
+      <li>写真・形状・重量・寸法が現物と一致するか</li>
+      <li>宝石名の後ろやコメント欄にある処理の記載（含浸・染色・拡散・充填など）</li>
+      <li>非加熱・産地をうたう場合は、分析報告書や海外ラボのレポートがあるか</li>
+      <li>枠の刻印（Pt900・Pt850・K18など）。高額石が良い枠に留められているか</li>
+    </ul></div>
+    <div class="card"><h2>社内価格指標（1ctあたり）</h2>
+      <div class="tbl"><table><thead><tr><th>宝石</th><th class="num">高品質</th><th class="num">高</th><th class="num">中</th><th class="num">低</th></tr></thead><tbody>
+      ${withIdx.map(g=>`<tr><td><a href="#g-${g.id}">${esc(g.ja.replace(/（.*）/,''))}</a></td>${g.idx.map(v=>`<td class="num">${esc(v||'―')}</td>`).join('')}</tr>`).join('')}
+      </tbody></table></div>
+      <p class="note-s">シート「宝石の値段まとめ（案件レベルの早見表）」より。単位はシートの表記のまま。実査定では石名・重量・評価・自分の査定額・実際の査定額を記録して差を確認する。</p>
+    </div>
+    <div class="card"><h2>おすすめ書籍</h2><dl class="kv">
+      <dt>宝石学の基礎</dt><dd>中央宝石研究所。宝石の種類・特徴・鑑定方法を体系的に学べる</dd>
+      <dt>ジュエリー&amp;ジェム</dt><dd>実際の査定に役立つ知識が豊富</dd>
+      <dt>カラーストーンのすべて</dt><dd>リチャード・W・ヒューズ。カラーストーンの鑑定に強くなる</dd>
+      <dt>ダイヤモンドの科学</dt><dd>ダイヤモンドの評価基準を理解する</dd>
+    </dl></div>
+  </section>`;
+}
+
+/* ---------- quiz ---------- */
+const shuffle = a => { a = a.slice(); for (let i = a.length-1; i > 0; i--){ const j = Math.floor(Math.random()*(i+1)); [a[i],a[j]] = [a[j],a[i]]; } return a; };
+const pick = a => a[Math.floor(Math.random()*a.length)];
+const base = GEMS.filter(g => !/cab$/.test(g.id));
+const QTYPES = {
+  ri:{label:'屈折率', make(){
+    const g = pick(base);
+    const d = shuffle(base.filter(x => Math.abs(x.ri[0]-g.ri[0]) > 0.02)).slice(0,3);
+    return {q:`屈折率 <span class="mono">${esc(g.riText.replace(/（.*）/,''))}</span> を示す宝石は？`, ans:g, opts:[g,...d], why:`${g.ja}：${g.riText}（${g.optic}）`};
+  }},
+  h:{label:'硬度', make(){
+    const g = pick(base);
+    const d = shuffle(base.filter(x => x.h !== g.h && x.group !== g.group)).filter((x,i,a)=>a.findIndex(y=>y.h===x.h)===i).slice(0,3);
+    return {q:`モース硬度 <span class="mono">${esc(g.h)}</span> の宝石は？`, ans:g, opts:[g,...d], why:`${g.ja}の硬度は${g.h}。`};
+  }},
+  sig:{label:'特徴', make(){
+    const g = pick(base);
+    const d = shuffle(base.filter(x => x.id !== g.id && x.group !== g.group)).slice(0,3);
+    return {q:`「${esc(pick(g.sig))}」が特徴の宝石は？`, ans:g, opts:[g,...d], why:g.key};
+  }},
+  origin:{label:'産地', make(){
+    const g = pick(base.filter(x => x.origin.length));
+    const [o, f] = pick(g.origin);
+    const d = shuffle(base.filter(x => x.id !== g.id && x.group !== g.group)).slice(0,3);
+    return {q:`産地「${esc(o)}」${f?`：${esc(f)}`:''}。この宝石は？`, ans:g, opts:[g,...d], why:`${g.ja}の産地の特徴。`};
+  }},
+  treat:{label:'処理', make(){
+    const t = pick(TREATMENTS);
+    const opts = ['E','T','A'].map(k => ({id:k, ja:KIND[k].label}));
+    return {q:`「${esc(t.n)}」の区分は？<div class="muted" style="font-size:13px;font-weight:500">主な宝石：${esc(t.stones)}</div>`, ans:opts.find(o=>o.id===t.k), opts, fixed:true, why:`${t.what}。${KIND[t.k].desc}`, noLink:true};
+  }}
+};
+let quiz = {types: store.get('qtypes', Object.keys(QTYPES)), cur:null, answered:false, right:0, total:0, streak:0, best: store.get('best', 0)};
+function newQ(){
+  const types = quiz.types.length ? quiz.types : Object.keys(QTYPES);
+  const q = QTYPES[pick(types)].make();
+  q.opts = q.fixed ? q.opts : shuffle(q.opts);
+  quiz.cur = q; quiz.answered = false;
+}
+function viewQuiz(){
+  if (!quiz.cur) newQ();
+  const q = quiz.cur;
+  $app.innerHTML = `<section class="view">
+    <div><div class="eyebrow">Quiz</div><h1 style="font-family:var(--f-display);font-size:26px">覚えるクイズ</h1></div>
+    <div class="chips" role="group" aria-label="出題範囲">${Object.entries(QTYPES).map(([k,v])=>`<button class="chip" type="button" data-qt="${k}" aria-pressed="${quiz.types.includes(k)}">${v.label}</button>`).join('')}</div>
+    <div class="qcard">
+      <div class="qhead"><span>${quiz.total+ (quiz.answered?0:1)}問目</span><div class="score"><span>正解 <b>${quiz.right}/${quiz.total}</b></span><span>連続 <b>${quiz.streak}</b></span><span>最高 <b>${quiz.best}</b></span></div></div>
+      <div class="qtext">${q.q}</div>
+      <div class="opts">${q.opts.map((o,i)=>`<button class="opt" type="button" data-i="${i}">${esc(o.ja)}</button>`).join('')}</div>
+      <div id="qexp"></div>
+    </div>
+  </section>`;
+  $app.querySelectorAll('[data-qt]').forEach(b => b.addEventListener('click', () => {
+    const k = b.dataset.qt; const s = new Set(quiz.types); s.has(k) ? s.delete(k) : s.add(k);
+    quiz.types = [...s]; store.set('qtypes', quiz.types); newQ(); viewQuiz();
+  }));
+  $app.querySelectorAll('.opt').forEach(b => b.addEventListener('click', () => answer(+b.dataset.i)));
+}
+function answer(i){
+  if (quiz.answered) return;
+  const q = quiz.cur; quiz.answered = true; quiz.total++;
+  const ok = q.opts[i].id === q.ans.id;
+  if (ok){ quiz.right++; quiz.streak++; if (quiz.streak > quiz.best){ quiz.best = quiz.streak; store.set('best', quiz.best); } } else quiz.streak = 0;
+  $app.querySelectorAll('.opt').forEach((b, j) => { b.disabled = true; if (q.opts[j].id === q.ans.id) b.classList.add('ok'); else if (j === i) b.classList.add('ng'); });
+  document.getElementById('qexp').innerHTML = `<div class="explain"><b>${ok?'正解':'不正解'}</b>　正解は「${esc(q.ans.ja)}」。${esc(q.why)}${q.noLink?'':` <a href="#g-${q.ans.id}">詳しく見る</a>`}</div>
+    <div class="btnrow" style="margin-top:10px"><button class="btn" type="button" id="nextQ">次の問題</button></div>`;
+  $app.querySelector('.qhead').querySelector('.score').innerHTML = `<span>正解 <b>${quiz.right}/${quiz.total}</b></span><span>連続 <b>${quiz.streak}</b></span><span>最高 <b>${quiz.best}</b></span>`;
+  document.getElementById('nextQ').addEventListener('click', () => { newQ(); viewQuiz(); window.scrollTo(0,0); });
+}
+
+/* ---------- router ---------- */
+function route(){
+  const h = (location.hash || '#gems').slice(1);
+  let tab = 'gems';
+  if (h.startsWith('g-') && byId[h.slice(2)]) viewGem(byId[h.slice(2)]);
+  else if (h === 'treat'){ tab = 'treat'; viewTreat(); }
+  else if (h === 'check'){ tab = 'check'; viewCheck(); }
+  else if (h === 'quiz'){ tab = 'quiz'; viewQuiz(); }
+  else if (h === 'cert'){ tab = 'cert'; viewRef(); }
+  else viewList();
+  document.querySelectorAll('.tabs a').forEach(a => { if (a.dataset.tab === tab) a.setAttribute('aria-current','page'); else a.removeAttribute('aria-current'); });
+}
+window.addEventListener('hashchange', () => { route(); window.scrollTo(0,0); });
+route();
+})();
+
+</script>
+
+</body>
+</html>
